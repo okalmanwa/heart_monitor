@@ -52,6 +52,7 @@ def register(request):
 @permission_classes([AllowAny])
 def create_test_users(request):
     """One-time endpoint to create test users - call this from browser"""
+    """One-time endpoint to create test users - call this from browser"""
     test_users_data = [
         {
             'username': 'john_doe',
@@ -103,6 +104,44 @@ def create_test_users(request):
             'test@example.com': 'test123',
         }
     }, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+def populate_patients(request):
+    """Endpoint to populate database with 20+ realistic patients"""
+    from django.core.management import call_command
+    from io import StringIO
+    import sys
+    
+    count = int(request.GET.get('count', 20))
+    
+    # Capture command output
+    old_stdout = sys.stdout
+    sys.stdout = StringIO()
+    
+    try:
+        call_command('populate_patients', count=count, verbosity=1)
+        output = sys.stdout.getvalue()
+        sys.stdout = old_stdout
+        
+        # Count created patients
+        lines = output.split('\n')
+        created_count = len([l for l in lines if '✅ Created patient:' in l])
+        
+        return Response({
+            'message': f'Successfully populated {created_count} patients!',
+            'count': created_count,
+            'output': output,
+            'note': 'Check the output field for details. All patients use password: Patient123!'
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        sys.stdout = old_stdout
+        return Response({
+            'error': str(e),
+            'output': sys.stdout.getvalue() if hasattr(sys.stdout, 'getvalue') else ''
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
