@@ -89,6 +89,9 @@ const Dashboard = () => {
           <Typography variant="body2" sx={{ mr: 2 }}>
             {user?.email}
           </Typography>
+          <Button color="inherit" onClick={() => navigate('/admin')} sx={{ mr: 1 }}>
+            Admin Panel
+          </Button>
           <Button color="inherit" onClick={handleLogout}>
             Logout
           </Button>

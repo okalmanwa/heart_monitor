@@ -4,12 +4,14 @@ from .models import BloodPressureReading
 
 class BloodPressureReadingSerializer(serializers.ModelSerializer):
     category = serializers.CharField(read_only=True)
+    user_email = serializers.EmailField(source='user.email', read_only=True)
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
 
     class Meta:
         model = BloodPressureReading
-        fields = ['id', 'systolic', 'diastolic', 'heart_rate', 'recorded_at', 
+        fields = ['id', 'user', 'user_id', 'user_email', 'systolic', 'diastolic', 'heart_rate', 'recorded_at', 
                   'notes', 'created_at', 'updated_at', 'category']
-        read_only_fields = ['id', 'created_at', 'updated_at', 'category']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'category', 'user_id', 'user_email']
 
     def validate_systolic(self, value):
         if value < 50 or value > 250:

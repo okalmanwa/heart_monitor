@@ -3,11 +3,14 @@ from .models import HealthFactor
 
 
 class HealthFactorSerializer(serializers.ModelSerializer):
+    user_email = serializers.EmailField(source='user.email', read_only=True)
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
+
     class Meta:
         model = HealthFactor
-        fields = ['id', 'date', 'sleep_quality', 'stress_level', 
+        fields = ['id', 'user', 'user_id', 'user_email', 'date', 'sleep_quality', 'stress_level', 
                   'exercise_duration', 'notes', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'user_email']
 
     def validate_sleep_quality(self, value):
         if value is not None and (value < 1 or value > 5):
