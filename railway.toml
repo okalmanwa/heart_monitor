@@ -2,7 +2,7 @@
 builder = "DOCKERFILE"
 
 [deploy]
-startCommand = "python manage.py migrate && gunicorn itaku_backend.wsgi:application --bind 0.0.0.0:$PORT"
+startCommand = "python manage.py migrate && python manage.py create_test_data --users-only && gunicorn itaku_backend.wsgi:application --bind 0.0.0.0:$PORT"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 
