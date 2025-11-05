@@ -57,8 +57,19 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# Exempt API views from CSRF (handled by DRF)
+# CSRF Configuration
 CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='').split(',') if config('CSRF_TRUSTED_ORIGINS', default='') else []
+# Add Railway domain to CSRF trusted origins
+if 'heartmonitor-production.up.railway.app' not in CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS.append('https://heartmonitor-production.up.railway.app')
+# Also add any Railway subdomains
+CSRF_TRUSTED_ORIGINS.extend(['https://*.railway.app'])
+CSRF_TRUSTED_ORIGINS = list(set(CSRF_TRUSTED_ORIGINS))  # Remove duplicates
+
+# CSRF cookie settings
+CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=False, cast=bool)  # Set to True in production with HTTPS
+CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to access CSRF token
+CSRF_USE_SESSIONS = False  # Use cookies, not sessions
 
 ROOT_URLCONF = 'itaku_backend.urls'
 
