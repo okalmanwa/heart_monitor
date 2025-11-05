@@ -21,6 +21,9 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 # Allow all hosts in production (update with your domain)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
+# Also add Railway domain
+ALLOWED_HOSTS.extend(['*.railway.app', 'heartmonitor-production.up.railway.app'])
+ALLOWED_HOSTS = list(set(ALLOWED_HOSTS))  # Remove duplicates
 
 
 # Application definition
@@ -48,7 +51,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     # CSRF middleware - DRF handles CSRF for API views
-    # 'django.middleware.csrf.CsrfViewMiddleware',  # Commented out for API
+    'django.middleware.csrf.CsrfViewMiddleware',  # Keep it but DRF will handle exemptions
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
