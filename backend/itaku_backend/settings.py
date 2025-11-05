@@ -59,11 +59,13 @@ MIDDLEWARE = [
 
 # CSRF Configuration
 CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='').split(',') if config('CSRF_TRUSTED_ORIGINS', default='') else []
+# Filter out empty strings
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in CSRF_TRUSTED_ORIGINS if origin.strip()]
+
 # Add Railway domain to CSRF trusted origins
-if 'heartmonitor-production.up.railway.app' not in CSRF_TRUSTED_ORIGINS:
-    CSRF_TRUSTED_ORIGINS.append('https://heartmonitor-production.up.railway.app')
-# Also add any Railway subdomains
-CSRF_TRUSTED_ORIGINS.extend(['https://*.railway.app'])
+railway_domain = 'https://heartmonitor-production.up.railway.app'
+if railway_domain not in CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS.append(railway_domain)
 CSRF_TRUSTED_ORIGINS = list(set(CSRF_TRUSTED_ORIGINS))  # Remove duplicates
 
 # CSRF cookie settings
