@@ -178,10 +178,12 @@ SIMPLE_JWT = {
 
 # CORS Settings
 # For production, add your frontend domain here
-CORS_ALLOWED_ORIGINS = config(
+cors_origins = config(
     'CORS_ALLOWED_ORIGINS',
     default='http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173'
-).split(',')
+)
+# Filter out empty strings and invalid values
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins.split(',') if origin.strip() and origin.strip() not in ['True', 'False', 'true', 'false']]
 
 # For development/testing - allow all origins temporarily
 # Remove this in production and use CORS_ALLOWED_ORIGINS instead
