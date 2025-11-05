@@ -115,7 +115,7 @@ const AdminReadings = () => {
   const handleEdit = (reading: BloodPressureReading) => {
     setEditingReading(reading)
     setFormData({
-      user_id: reading.user?.toString() || '',
+      user_id: (reading as any).user_id?.toString() || reading.user?.toString() || '',
       systolic: reading.systolic.toString(),
       diastolic: reading.diastolic.toString(),
       heart_rate: reading.heart_rate?.toString() || '',

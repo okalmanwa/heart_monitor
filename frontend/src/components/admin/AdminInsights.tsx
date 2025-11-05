@@ -102,6 +102,7 @@ const AdminInsights = () => {
   const handleEdit = (insight: UserInsight) => {
     setEditingInsight(insight)
     setFormData({
+      user_id: (insight as any).user_id?.toString() || insight.user?.toString() || '',
       insight_text: insight.insight_text,
       insight_type: insight.insight_type,
       severity: insight.severity,
