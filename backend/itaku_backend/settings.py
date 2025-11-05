@@ -176,8 +176,9 @@ CORS_ALLOWED_ORIGINS = config(
     default='http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173'
 ).split(',')
 
-# For development/testing only (remove in production!)
-# CORS_ALLOW_ALL_ORIGINS = True  # Uncomment only if needed
+# For development/testing - allow all origins temporarily
+# Remove this in production and use CORS_ALLOWED_ORIGINS instead
+CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default=False, cast=bool)
 
 CORS_ALLOW_CREDENTIALS = True
 
