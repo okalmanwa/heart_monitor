@@ -1,6 +1,5 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "cd backend && pip install -r requirements.txt && python manage.py collectstatic --noinput"
 
 [deploy]
 startCommand = "cd backend && python manage.py migrate && gunicorn itaku_backend.wsgi:application --bind 0.0.0.0:$PORT"

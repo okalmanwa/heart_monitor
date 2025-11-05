@@ -1,0 +1,4 @@
+# This file helps Railway auto-detect Python
+# Actual requirements are in backend/requirements.txt
+# Railway will detect Python and use backend/requirements.txt
+
