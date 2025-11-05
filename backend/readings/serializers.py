@@ -1,11 +1,14 @@
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
 from .models import BloodPressureReading
+
+User = get_user_model()
 
 
 class BloodPressureReadingSerializer(serializers.ModelSerializer):
     category = serializers.CharField(read_only=True)
     user_email = serializers.EmailField(source='user.email', read_only=True)
-    user = serializers.PrimaryKeyRelatedField(read_only=True)
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), required=False)
 
     class Meta:
         model = BloodPressureReading

@@ -5,10 +5,16 @@ export interface User {
   first_name: string
   last_name: string
   created_at: string
+  is_patient?: boolean
+  is_staff?: boolean
+  is_superuser?: boolean
+  is_admin?: boolean
 }
 
 export interface BloodPressureReading {
   id?: number
+  user?: number
+  user_email?: string
   systolic: number
   diastolic: number
   heart_rate?: number
@@ -21,6 +27,8 @@ export interface BloodPressureReading {
 
 export interface HealthFactor {
   id?: number
+  user?: number
+  user_email?: string
   date: string
   sleep_quality?: number
   stress_level?: number
@@ -32,6 +40,8 @@ export interface HealthFactor {
 
 export interface UserInsight {
   id: number
+  user?: number
+  user_email?: string
   insight_text: string
   insight_type: 'trend' | 'anomaly' | 'correlation' | 'alert'
   generated_at: string

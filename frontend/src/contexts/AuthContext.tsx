@@ -29,10 +29,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Configure axios defaults
   useEffect(() => {
     if (token) {
-      // Fetch user profile
+      // Fetch user profile and admin status
       apiClient.get('/api/auth/profile/')
         .then(response => {
-          setUser(response.data)
+          const userData = response.data
+          // Also check admin status
+          return apiClient.get('/api/auth/admin-check/')
+            .then(adminResponse => {
+              setUser({ ...userData, ...adminResponse.data })
+            })
+            .catch(() => {
+              setUser(userData)
+            })
         })
         .catch(() => {
           localStorage.removeItem('token')
@@ -52,7 +60,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setToken(access)
     
     const userResponse = await apiClient.get('/api/auth/profile/')
-    setUser(userResponse.data)
+    const userData = userResponse.data
+    // Also check admin status
+    try {
+      const adminResponse = await apiClient.get('/api/auth/admin-check/')
+      setUser({ ...userData, ...adminResponse.data })
+    } catch {
+      setUser(userData)
+    }
   }
 
   const register = async (username: string, email: string, password: string) => {
@@ -66,7 +81,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.setItem('token', access)
     localStorage.setItem('refresh', refresh)
     setToken(access)
-    setUser(response.data.user)
+    
+    const userData = response.data.user
+    // Also check admin status
+    try {
+      const adminResponse = await apiClient.get('/api/auth/admin-check/')
+      setUser({ ...userData, ...adminResponse.data })
+    } catch {
+      setUser(userData)
+    }
   }
 
   const logout = () => {
