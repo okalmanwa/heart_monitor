@@ -16,7 +16,7 @@ import ReadingForm from '../components/ReadingForm'
 import ReadingsTable from '../components/ReadingsTable'
 import BPChart from '../components/BPChart'
 import { BloodPressureReading } from '../types'
-import axios from 'axios'
+import apiClient from '../config/axios'
 
 const Dashboard = () => {
   const { user, logout } = useAuth()
@@ -26,7 +26,7 @@ const Dashboard = () => {
 
   const fetchReadings = async () => {
     try {
-      const response = await axios.get('/api/readings/')
+      const response = await apiClient.get('/api/readings/')
       setReadings(response.data.results || response.data)
     } catch (error) {
       console.error('Failed to fetch readings:', error)
@@ -103,7 +103,7 @@ const Dashboard = () => {
                 onReadingDeleted={handleReadingDeleted}
                 onExportPDF={async () => {
                   try {
-                    const response = await axios.get('/api/readings/export-pdf/', {
+                    const response = await apiClient.get('/api/readings/export-pdf/', {
                       responseType: 'blob',
                     })
                     const url = window.URL.createObjectURL(new Blob([response.data]))

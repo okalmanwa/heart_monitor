@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import axios from 'axios'
+import apiClient from '../config/axios'
 import { User } from '../types'
 
 interface AuthContextType {
@@ -29,9 +29,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Configure axios defaults
   useEffect(() => {
     if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       // Fetch user profile
-      axios.get('/api/auth/profile/')
+      apiClient.get('/api/auth/profile/')
         .then(response => {
           setUser(response.data)
         })
@@ -46,19 +45,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [token])
 
   const login = async (email: string, password: string) => {
-    const response = await axios.post('/api/token/', { email, password })
+    const response = await apiClient.post('/api/token/', { email, password })
     const { access, refresh } = response.data
     localStorage.setItem('token', access)
     localStorage.setItem('refresh', refresh)
     setToken(access)
-    axios.defaults.headers.common['Authorization'] = `Bearer ${access}`
     
-    const userResponse = await axios.get('/api/auth/profile/')
+    const userResponse = await apiClient.get('/api/auth/profile/')
     setUser(userResponse.data)
   }
 
   const register = async (username: string, email: string, password: string) => {
-    const response = await axios.post('/api/auth/register/', {
+    const response = await apiClient.post('/api/auth/register/', {
       username,
       email,
       password,
@@ -68,7 +66,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.setItem('token', access)
     localStorage.setItem('refresh', refresh)
     setToken(access)
-    axios.defaults.headers.common['Authorization'] = `Bearer ${access}`
     setUser(response.data.user)
   }
 
@@ -77,7 +74,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem('refresh')
     setToken(null)
     setUser(null)
-    delete axios.defaults.headers.common['Authorization']
   }
 
   return (

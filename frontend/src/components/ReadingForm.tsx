@@ -5,7 +5,7 @@ import {
   Alert,
   Typography,
 } from '@mui/material'
-import axios from 'axios'
+import apiClient from '../config/axios'
 import { BloodPressureReading } from '../types'
 
 interface ReadingFormProps {
@@ -28,7 +28,7 @@ const ReadingForm: React.FC<ReadingFormProps> = ({ onReadingAdded }) => {
     const now = new Date().toISOString()
 
     try {
-      const response = await axios.post('/api/readings/', {
+      const response = await apiClient.post('/api/readings/', {
         systolic: parseInt(systolic),
         diastolic: parseInt(diastolic),
         heart_rate: heartRate ? parseInt(heartRate) : null,

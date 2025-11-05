@@ -15,7 +15,7 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import PrintIcon from '@mui/icons-material/Print'
 import DownloadIcon from '@mui/icons-material/Download'
 import { BloodPressureReading } from '../types'
-import axios from 'axios'
+import apiClient from '../config/axios'
 import { format } from 'date-fns'
 
 interface ReadingsTableProps {
@@ -64,7 +64,7 @@ const ReadingsTable: React.FC<ReadingsTableProps> = ({
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this reading?')) {
       try {
-        await axios.delete(`/api/readings/${id}/`)
+        await apiClient.delete(`/api/readings/${id}/`)
         onReadingDeleted(id)
       } catch (error) {
         console.error('Failed to delete reading:', error)
