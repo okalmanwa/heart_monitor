@@ -77,16 +77,28 @@ WSGI_APPLICATION = 'itaku_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='moyo_db'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='postgres'),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
+# Railway provides database via DATABASE_URL or individual variables
+import dj_database_url
+
+# Try to get DATABASE_URL first (Railway's default)
+DATABASE_URL = config('DATABASE_URL', default=None)
+
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL)
     }
-}
+else:
+    # Fallback to individual variables
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('DB_NAME', default=config('PGDATABASE', default='moyo_db')),
+            'USER': config('DB_USER', default=config('PGUSER', default='postgres')),
+            'PASSWORD': config('DB_PASSWORD', default=config('PGPASSWORD', default='postgres')),
+            'HOST': config('DB_HOST', default=config('PGHOST', default='localhost')),
+            'PORT': config('DB_PORT', default=config('PGPORT', default='5432')),
+        }
+    }
 
 
 # Password validation
