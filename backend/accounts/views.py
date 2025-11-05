@@ -11,16 +11,22 @@ from .models import User
 @permission_classes([AllowAny])
 def register(request):
     """User registration endpoint"""
-    serializer = UserRegistrationSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.save()
-        refresh = RefreshToken.for_user(user)
+    try:
+        serializer = UserRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'user': UserSerializer(user).data,
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
         return Response({
-            'user': UserSerializer(user).data,
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-        }, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            'error': str(e),
+            'detail': 'An error occurred during registration'
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
