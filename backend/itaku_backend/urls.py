@@ -17,5 +17,7 @@ urlpatterns = [
     path('api/readings/', include('readings.urls')),
     path('api/health-factors/', include('health_factors.urls')),
     path('api/insights/', include('insights.urls')),
+    path('api/medications/', include('medications.urls')),
+    path('api/notifications/', include('notifications.urls')),
 ]
 

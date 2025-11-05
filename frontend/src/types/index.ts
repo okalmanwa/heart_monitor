@@ -38,6 +38,32 @@ export interface HealthFactor {
   updated_at?: string
 }
 
+export interface Medication {
+  id?: number
+  user?: number
+  user_email?: string
+  name: string
+  dosage: string
+  frequency: 'once_daily' | 'twice_daily' | 'three_times_daily' | 'four_times_daily' | 'as_needed' | 'weekly' | 'other'
+  start_date: string
+  end_date?: string
+  is_active: boolean
+  notes?: string
+  created_at?: string
+  updated_at?: string
+  logs?: MedicationLog[]
+  recent_logs_count?: number
+}
+
+export interface MedicationLog {
+  id?: number
+  medication: number
+  medication_name?: string
+  taken_at: string
+  notes?: string
+  created_at?: string
+}
+
 export interface UserInsight {
   id: number
   user?: number
@@ -48,4 +74,3 @@ export interface UserInsight {
   is_read: boolean
   severity: 'low' | 'medium' | 'high'
 }
-

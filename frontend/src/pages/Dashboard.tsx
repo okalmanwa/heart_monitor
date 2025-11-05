@@ -19,7 +19,12 @@ import ReadingsTable from '../components/ReadingsTable'
 import BPChart from '../components/BPChart'
 import HealthFactorsForm from '../components/HealthFactorsForm'
 import HealthFactorsTable from '../components/HealthFactorsTable'
-import { BloodPressureReading, HealthFactor } from '../types'
+import MedicationForm from '../components/MedicationForm'
+import MedicationsTable from '../components/MedicationsTable'
+import AdvancedBPChart from '../components/AdvancedBPChart'
+import CorrelationChart from '../components/CorrelationChart'
+import NotificationPreferences from '../components/NotificationPreferences'
+import { BloodPressureReading, HealthFactor, Medication } from '../types'
 import apiClient from '../config/axios'
 
 const Dashboard = () => {
@@ -27,9 +32,12 @@ const Dashboard = () => {
   const navigate = useNavigate()
   const [readings, setReadings] = useState<BloodPressureReading[]>([])
   const [healthFactors, setHealthFactors] = useState<HealthFactor[]>([])
+  const [medications, setMedications] = useState<Medication[]>([])
   const [loading, setLoading] = useState(true)
   const [factorsLoading, setFactorsLoading] = useState(true)
+  const [medicationsLoading, setMedicationsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState(0)
+  const [editingMedication, setEditingMedication] = useState<Medication | null>(null)
 
   const fetchReadings = async () => {
     try {
@@ -53,9 +61,21 @@ const Dashboard = () => {
     }
   }
 
+  const fetchMedications = async () => {
+    try {
+      const response = await apiClient.get('/api/medications/medications/')
+      setMedications(response.data.results || response.data)
+    } catch (error) {
+      console.error('Failed to fetch medications:', error)
+    } finally {
+      setMedicationsLoading(false)
+    }
+  }
+
   useEffect(() => {
     fetchReadings()
     fetchHealthFactors()
+    fetchMedications()
   }, [])
 
   const handleLogout = () => {
@@ -77,6 +97,19 @@ const Dashboard = () => {
 
   const handleFactorDeleted = (id: number) => {
     setHealthFactors(healthFactors.filter(f => f.id !== id))
+  }
+
+  const handleMedicationAdded = (newMedication: Medication) => {
+    setMedications([newMedication, ...medications])
+  }
+
+  const handleMedicationDeleted = (id: number) => {
+    setMedications(medications.filter(m => m.id !== id))
+  }
+
+  const handleMedicationUpdated = (updatedMedication: Medication) => {
+    setMedications(medications.map(m => m.id === updatedMedication.id ? updatedMedication : m))
+    setEditingMedication(null)
   }
 
   return (
@@ -113,6 +146,9 @@ const Dashboard = () => {
           <Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)}>
             <Tab label="Blood Pressure" />
             <Tab label="Health Factors" />
+            <Tab label="Medications" />
+            <Tab label="Charts" />
+            <Tab label="Notifications" />
           </Tabs>
         </Box>
 
@@ -132,7 +168,7 @@ const Dashboard = () => {
                 <Typography variant="h6" gutterBottom>
                   Blood Pressure Trends
                 </Typography>
-                <BPChart readings={readings} />
+                <AdvancedBPChart readings={readings} />
               </Paper>
             </Grid>
 
@@ -190,6 +226,63 @@ const Dashboard = () => {
                   onFactorDeleted={handleFactorDeleted}
                 />
               </Paper>
+            </Grid>
+          </Grid>
+        )}
+
+        {activeTab === 2 && (
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={4}>
+              <Paper sx={{ p: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  {editingMedication ? 'Edit Medication' : 'Add Medication'}
+                </Typography>
+                <MedicationForm
+                  onMedicationAdded={handleMedicationAdded}
+                  onMedicationUpdated={handleMedicationUpdated}
+                  initialData={editingMedication || undefined}
+                  onCancel={() => setEditingMedication(null)}
+                />
+              </Paper>
+            </Grid>
+
+            <Grid item xs={12} md={8}>
+              <Paper sx={{ p: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  My Medications
+                </Typography>
+                <MedicationsTable
+                  medications={medications}
+                  loading={medicationsLoading}
+                  onMedicationDeleted={handleMedicationDeleted}
+                  onMedicationUpdated={handleMedicationUpdated}
+                  onEdit={setEditingMedication}
+                />
+              </Paper>
+            </Grid>
+          </Grid>
+        )}
+
+        {activeTab === 3 && (
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <Paper sx={{ p: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Advanced Charts & Correlations
+                </Typography>
+                <Box sx={{ mb: 3 }}>
+                  <AdvancedBPChart readings={readings} />
+                </Box>
+                <CorrelationChart readings={readings} healthFactors={healthFactors} />
+              </Paper>
+            </Grid>
+          </Grid>
+        )}
+
+        {activeTab === 4 && (
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <NotificationPreferences />
             </Grid>
           </Grid>
         )}
