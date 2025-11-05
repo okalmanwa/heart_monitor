@@ -7,6 +7,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from .serializers import UserRegistrationSerializer, UserSerializer
 from .models import User
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 @csrf_exempt
@@ -42,6 +45,64 @@ def register(request):
             'error': str(e),
             'detail': 'An error occurred during registration'
         }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@csrf_exempt
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+def create_test_users(request):
+    """One-time endpoint to create test users - call this from browser"""
+    test_users_data = [
+        {
+            'username': 'john_doe',
+            'email': 'john.doe@example.com',
+            'password': 'TestPassword123!',
+            'first_name': 'John',
+            'last_name': 'Doe',
+        },
+        {
+            'username': 'jane_smith',
+            'email': 'jane.smith@example.com',
+            'password': 'TestPassword123!',
+            'first_name': 'Jane',
+            'last_name': 'Smith',
+        },
+        {
+            'username': 'test_user',
+            'email': 'test@example.com',
+            'password': 'test123',
+            'first_name': 'Test',
+            'last_name': 'User',
+        },
+    ]
+    
+    created = []
+    existing = []
+    
+    for user_data in test_users_data:
+        email = user_data['email']
+        if User.objects.filter(email=email).exists():
+            existing.append(email)
+            continue
+        
+        try:
+            user = User.objects.create_user(**user_data)
+            created.append(email)
+        except Exception as e:
+            return Response({
+                'error': f'Error creating {email}: {str(e)}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+    
+    return Response({
+        'message': 'Test users created successfully!',
+        'created': created,
+        'existing': existing,
+        'login_info': {
+            'john.doe@example.com': 'TestPassword123!',
+            'jane.smith@example.com': 'TestPassword123!',
+            'test@example.com': 'test123',
+        }
+    }, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
