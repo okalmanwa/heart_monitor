@@ -60,7 +60,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    is_patient = serializers.SerializerMethodField()
+    
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'created_at')
-        read_only_fields = ('id', 'created_at')
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'created_at', 'is_patient', 'is_staff', 'is_superuser')
+        read_only_fields = ('id', 'created_at', 'is_patient', 'is_staff', 'is_superuser')
+    
+    def get_is_patient(self, obj):
+        return '@patient.example.com' in obj.email

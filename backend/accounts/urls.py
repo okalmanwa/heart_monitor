@@ -1,5 +1,9 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
+
+router = DefaultRouter()
+router.register(r'users', views.AdminUserViewSet, basename='admin-user')
 
 urlpatterns = [
     path('register/', views.register, name='register'),
@@ -7,7 +11,7 @@ urlpatterns = [
     path('populate-patients/', views.populate_patients, name='populate_patients'),
     path('profile/', views.profile, name='profile'),
     path('profile/update/', views.UserProfileUpdateView.as_view(), name='profile-update'),
-    path('admin/users/', views.list_all_users, name='list_all_users'),
-    path('admin/users/<int:user_id>/delete/', views.delete_user, name='delete_user'),
+    path('admin-check/', views.admin_check, name='admin_check'),
+    path('', include(router.urls)),
 ]
 

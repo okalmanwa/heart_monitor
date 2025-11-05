@@ -1,10 +1,13 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from django.contrib.auth import get_user_model
 from .models import BloodPressureReading
 from .serializers import BloodPressureReadingSerializer
 from .utils import generate_pdf_report
+
+User = get_user_model()
 
 
 class BloodPressureReadingViewSet(viewsets.ModelViewSet):
@@ -13,10 +16,19 @@ class BloodPressureReadingViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        # Admin users can see all readings, regular users see only their own
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return BloodPressureReading.objects.all().select_related('user')
         return BloodPressureReading.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        # Allow admin to specify user, otherwise use request user
+        user_id = self.request.data.get('user')
+        if (self.request.user.is_staff or self.request.user.is_superuser) and user_id:
+            user = User.objects.get(pk=user_id)
+            serializer.save(user=user)
+        else:
+            serializer.save(user=self.request.user)
 
     @action(detail=False, methods=['get'], url_path='export-pdf')
     def export_pdf(self, request):

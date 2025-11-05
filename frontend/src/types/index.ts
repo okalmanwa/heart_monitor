@@ -9,7 +9,6 @@ export interface User {
 
 export interface BloodPressureReading {
   id?: number
-  user?: number | string
   systolic: number
   diastolic: number
   heart_rate?: number
@@ -32,11 +31,10 @@ export interface HealthFactor {
 }
 
 export interface UserInsight {
-  id?: number
-  user?: number | string
+  id: number
   insight_text: string
   insight_type: 'trend' | 'anomaly' | 'correlation' | 'alert'
-  generated_at?: string
+  generated_at: string
   is_read: boolean
   severity: 'low' | 'medium' | 'high'
 }
