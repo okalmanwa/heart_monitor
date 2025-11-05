@@ -52,7 +52,6 @@ def register(request):
 @permission_classes([AllowAny])
 def create_test_users(request):
     """One-time endpoint to create test users - call this from browser"""
-    """One-time endpoint to create test users - call this from browser"""
     test_users_data = [
         {
             'username': 'john_doe',
