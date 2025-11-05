@@ -50,28 +50,42 @@ const AdminDashboard = () => {
 
   const fetchStats = async () => {
     try {
-      // We'll create these endpoints or fetch from existing ones
+      // Fetch all data with error handling
       const [usersRes, readingsRes, factorsRes, insightsRes] = await Promise.all([
-        apiClient.get('/api/auth/users/').catch(() => ({ data: { count: 0 } })),
-        apiClient.get('/api/readings/').catch(() => ({ data: { count: 0 } })),
-        apiClient.get('/api/health-factors/').catch(() => ({ data: { count: 0 } })),
-        apiClient.get('/api/insights/').catch(() => ({ data: { count: 0 } })),
+        apiClient.get('/api/auth/users/').catch(() => ({ data: [] })),
+        apiClient.get('/api/readings/').catch(() => ({ data: [] })),
+        apiClient.get('/api/health-factors/').catch(() => ({ data: [] })),
+        apiClient.get('/api/insights/').catch(() => ({ data: [] })),
       ])
 
-      const totalUsers = usersRes.data.count || usersRes.data.length || 0
-      const totalPatients = usersRes.data.results?.filter((u: any) => 
-        u.email?.includes('@patient.example.com')
-      ).length || 0
+      // Handle paginated or direct array responses
+      const users = usersRes.data.results || usersRes.data || []
+      const readings = readingsRes.data.results || readingsRes.data || []
+      const factors = factorsRes.data.results || factorsRes.data || []
+      const insights = insightsRes.data.results || insightsRes.data || []
+
+      const totalUsers = Array.isArray(users) ? users.length : 0
+      const totalPatients = Array.isArray(users) 
+        ? users.filter((u: any) => u.email?.includes('@patient.example.com')).length 
+        : 0
 
       setStats({
         totalUsers,
         totalPatients,
-        totalReadings: readingsRes.data.count || readingsRes.data.results?.length || 0,
-        totalHealthFactors: factorsRes.data.count || factorsRes.data.results?.length || 0,
-        totalInsights: insightsRes.data.count || insightsRes.data.results?.length || 0,
+        totalReadings: Array.isArray(readings) ? readings.length : 0,
+        totalHealthFactors: Array.isArray(factors) ? factors.length : 0,
+        totalInsights: Array.isArray(insights) ? insights.length : 0,
       })
     } catch (error) {
       console.error('Failed to fetch stats:', error)
+      // Set defaults on error
+      setStats({
+        totalUsers: 0,
+        totalPatients: 0,
+        totalReadings: 0,
+        totalHealthFactors: 0,
+        totalInsights: 0,
+      })
     }
   }
 

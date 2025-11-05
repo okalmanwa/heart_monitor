@@ -52,12 +52,14 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ onUpdate }) => {
   const fetchUsers = async () => {
     try {
       setLoading(true)
-      // We'll need to create an admin endpoint to list all users
       const response = await apiClient.get('/api/auth/users/')
-      setUsers(response.data.results || response.data || [])
+      // Handle both paginated and direct array responses
+      const usersData = response.data.results || response.data || []
+      setUsers(Array.isArray(usersData) ? usersData : [])
     } catch (error: any) {
       console.error('Failed to fetch users:', error)
-      setError('Failed to load users')
+      setError('Failed to load users. Make sure you are logged in as admin.')
+      setUsers([])
     } finally {
       setLoading(false)
     }
