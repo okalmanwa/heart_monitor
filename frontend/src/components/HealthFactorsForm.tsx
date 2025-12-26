@@ -27,15 +27,33 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
   const [notes, setNotes] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [dateError, setDateError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setDateError('')
     setSuccess(false)
 
+    // Validate date is present
+    const dateValue = date.trim()
+    if (!dateValue) {
+      setDateError('Please select a date.')
+      setError('Please select a date.')
+      return
+    }
+
     try {
+      console.log('Submitting health factor with data:', {
+        date: dateValue,
+        sleep_quality: sleepQuality,
+        stress_level: stressLevel,
+        exercise_duration: exerciseDuration ? parseInt(exerciseDuration) : null,
+        notes: notes || '',
+      })
+
       const response = await apiClient.post('/api/health-factors/', {
-        date,
+        date: dateValue,
         sleep_quality: sleepQuality || null,
         stress_level: stressLevel || null,
         exercise_duration: exerciseDuration ? parseInt(exerciseDuration) : null,
@@ -45,26 +63,75 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
       setSuccess(true)
       onFactorAdded(response.data)
       
-      // Reset form
+      // Reset form but keep the date as today
+      const today = new Date()
+      setDate(today.toISOString().split('T')[0])
       setSleepQuality(null)
       setStressLevel(null)
       setExerciseDuration('')
       setNotes('')
+      setDateError('')
 
       setTimeout(() => setSuccess(false), 3000)
     } catch (err: any) {
-      const errorMsg = err.response?.data
-      if (typeof errorMsg === 'object') {
-        const firstError = Object.values(errorMsg)[0]
-        setError(Array.isArray(firstError) ? firstError[0] : String(firstError))
+      console.error('Health factor creation error:', err)
+      
+      // Check if it's an IntegrityError (duplicate entry)
+      const errorResponse = err.response?.data
+      const errorText = typeof errorResponse === 'string' ? errorResponse : ''
+      
+      if (errorText.includes('duplicate key') || errorText.includes('already exists') || 
+          errorText.includes('unique constraint') || err.response?.status === 500) {
+        const duplicateError = 'You already have a health factor entry for this date. Please select a different date or update the existing entry.'
+        setError(duplicateError)
+        setDateError(duplicateError)
+        return
+      }
+      
+      // Handle JSON error responses
+      if (typeof errorResponse === 'object' && errorResponse !== null) {
+        // Handle field-specific errors
+        if (errorResponse.date) {
+          const dateErr = Array.isArray(errorResponse.date) ? errorResponse.date[0] : String(errorResponse.date)
+          setDateError(dateErr)
+          setError(dateErr)
+        } else if (errorResponse.non_field_errors) {
+          // Handle unique constraint errors
+          const uniqueErr = Array.isArray(errorResponse.non_field_errors) 
+            ? errorResponse.non_field_errors[0] 
+            : String(errorResponse.non_field_errors)
+          setError(uniqueErr)
+          if (uniqueErr.includes('date') || uniqueErr.includes('already exists') || uniqueErr.includes('duplicate')) {
+            setDateError('You already have a health factor entry for this date. Please select a different date.')
+          }
+        } else {
+          // Get first error from any field
+          const errorKeys = Object.keys(errorResponse)
+          if (errorKeys.length > 0) {
+            const firstKey = errorKeys[0]
+            const firstError = errorResponse[firstKey]
+            const errorText = Array.isArray(firstError) ? firstError[0] : String(firstError)
+            setError(`${firstKey}: ${errorText}`)
+            if (firstKey === 'date') {
+              setDateError(errorText)
+            }
+          } else {
+            setError('Failed to add health factor. Please check your input.')
+          }
+        }
+      } else if (typeof errorResponse === 'string' && errorResponse) {
+        setError(errorResponse)
+        if (errorResponse.toLowerCase().includes('date') || errorResponse.toLowerCase().includes('duplicate')) {
+          setDateError('You already have a health factor entry for this date. Please select a different date.')
+        }
       } else {
-        setError('Failed to add health factor. Please try again.')
+        setError(err.message || 'Failed to add health factor. Please try again.')
       }
     }
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} noValidate>
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
@@ -82,10 +149,27 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
         fullWidth
         label="Date"
         type="date"
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
+        value={date || ''}
+        onChange={(e) => {
+          const newDate = e.target.value
+          console.log('Date changed to:', newDate)
+          setDate(newDate)
+          setDateError('')
+          setError('')
+        }}
         InputLabelProps={{
           shrink: true,
+        }}
+        error={!!dateError}
+        helperText={dateError || ''}
+        inputProps={{
+          min: '2000-01-01',
+          max: new Date().toISOString().split('T')[0],
+        }}
+        sx={{
+          '& input[type="date"]': {
+            color: date ? 'inherit' : 'transparent',
+          }
         }}
       />
 
