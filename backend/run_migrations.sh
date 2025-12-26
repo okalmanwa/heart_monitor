@@ -17,3 +17,4 @@ python manage.py migrate insights
 
 echo "Migrations completed!"
 
+

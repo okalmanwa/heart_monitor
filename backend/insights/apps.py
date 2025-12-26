@@ -9,3 +9,4 @@ class InsightsConfig(AppConfig):
         """Import signals when the app is ready"""
         import insights.signals  # noqa
 
+

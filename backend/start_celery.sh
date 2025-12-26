@@ -33,3 +33,4 @@ echo ""
 # Start Celery worker
 celery -A itaku_backend worker --loglevel=info
 
+

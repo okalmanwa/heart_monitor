@@ -233,3 +233,4 @@ Without Celery/Redis:
 - ❌ Scalability: **One request at a time**
 - ❌ Reliability: **No retry mechanism**
 
+

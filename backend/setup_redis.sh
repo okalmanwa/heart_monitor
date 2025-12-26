@@ -107,3 +107,4 @@ echo "  ./start_redis.sh    # Start Redis"
 echo "  ./start_celery.sh   # Start Celery worker"
 echo "  ./start_all.sh      # Start everything"
 
+

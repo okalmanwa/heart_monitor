@@ -111,3 +111,4 @@ Potential improvements:
 - Insight history/archive
 - Push notifications for new insights
 
+
