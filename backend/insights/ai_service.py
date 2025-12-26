@@ -14,9 +14,21 @@ from .models import UserInsight
 
 User = get_user_model()
 
-# Initialize OpenAI client
+# OpenAI API key (lazy initialization of client)
 OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
-client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+_client = None
+
+
+def get_openai_client():
+    """Get or create OpenAI client (lazy initialization)"""
+    global _client
+    if _client is None and OPENAI_API_KEY:
+        try:
+            _client = OpenAI(api_key=OPENAI_API_KEY)
+        except Exception as e:
+            print(f"Warning: Failed to initialize OpenAI client: {e}")
+            _client = False  # Mark as failed to avoid retrying
+    return _client if _client else None
 
 
 def get_user_health_summary(user) -> Dict:
@@ -104,6 +116,7 @@ def generate_insights_with_ai(user) -> List[UserInsight]:
     Generate AI-powered insights for a user based on their health data
     Returns a list of created UserInsight objects
     """
+    client = get_openai_client()
     if not client:
         raise ValueError("OpenAI API key not configured. Please set OPENAI_API_KEY in your .env file.")
     
@@ -236,6 +249,7 @@ def generate_insight_summary(user) -> Optional[str]:
     Generate a brief summary of all insights for a user
     Returns a summary string or None
     """
+    client = get_openai_client()
     if not client:
         return None
     

@@ -69,12 +69,24 @@ class UserInsightViewSet(viewsets.ModelViewSet):
                     'insights_created': 0
                 }, status=status.HTTP_200_OK)
             
-            # Send notification email for each new insight (async)
+            # Send notification email for each new insight (async if Redis available, sync otherwise)
             for insight in created_insights:
-                send_insight_notification_email.delay(
-                    target_user.id,
-                    insight.insight_text
-                )
+                try:
+                    send_insight_notification_email.delay(
+                        target_user.id,
+                        insight.insight_text
+                    )
+                except Exception as e:
+                    # If Redis/Celery is not available, run synchronously
+                    # This allows development without Redis
+                    try:
+                        send_insight_notification_email(
+                            target_user.id,
+                            insight.insight_text
+                        )
+                    except Exception:
+                        # Silently fail if email sending fails (non-critical)
+                        pass
             
             # Serialize the created insights
             serializer = self.get_serializer(created_insights, many=True)

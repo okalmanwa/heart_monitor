@@ -37,9 +37,17 @@ def generate_insights_for_user_async(user_id):
         # Generate insights
         created_insights = generate_insights_with_ai(user)
         
-        # Send notification emails
+        # Send notification emails (async if Redis available, sync otherwise)
         for insight in created_insights:
-            send_insight_notification_email.delay(user_id, insight.insight_text)
+            try:
+                send_insight_notification_email.delay(user_id, insight.insight_text)
+            except Exception:
+                # If Redis/Celery is not available, run synchronously
+                try:
+                    send_insight_notification_email(user_id, insight.insight_text)
+                except Exception:
+                    # Silently fail if email sending fails (non-critical)
+                    pass
         
         return len(created_insights)
     except Exception as e:
@@ -70,5 +78,15 @@ def on_reading_created(sender, instance, created, **kwargs):
     
     if should_generate:
         # Generate insights asynchronously to avoid blocking the request
-        generate_insights_for_user_async.delay(instance.user.id)
+        # Fall back to sync if Redis/Celery is not available
+        try:
+            generate_insights_for_user_async.delay(instance.user.id)
+        except Exception:
+            # If Redis/Celery is not available, run synchronously
+            # This allows development without Redis
+            try:
+                generate_insights_for_user_async(instance.user.id)
+            except Exception as e:
+                # Log error but don't fail the request
+                print(f"Error generating insights synchronously: {e}")
 
