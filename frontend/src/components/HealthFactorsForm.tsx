@@ -9,7 +9,15 @@ import {
   Grid,
   CircularProgress,
   Snackbar,
+  Card,
+  CardContent,
+  LinearProgress,
+  Chip,
 } from '@mui/material'
+import BedtimeIcon from '@mui/icons-material/Bedtime'
+import SentimentVeryDissatisfiedIcon from '@mui/icons-material/SentimentVeryDissatisfied'
+import FitnessCenterIcon from '@mui/icons-material/FitnessCenter'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import apiClient from '../config/axios'
 import { HealthFactor } from '../types'
 
@@ -31,6 +39,35 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
   const [success, setSuccess] = useState(false)
   const [dateError, setDateError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Calculate form completion
+  const formProgress = [
+    date,
+    sleepQuality !== null,
+    stressLevel !== null,
+    exerciseDuration || notes,
+  ].filter(Boolean).length / 4
+
+  // Get sleep quality emoji and color
+  const getSleepQuality = (value: number | null) => {
+    if (!value) return null
+    if (value >= 4) return { emoji: '😴', label: 'Great Sleep!', color: '#4caf50' }
+    if (value >= 3) return { emoji: '😊', label: 'Good Sleep', color: '#8bc34a' }
+    if (value >= 2) return { emoji: '😐', label: 'Okay Sleep', color: '#ff9800' }
+    return { emoji: '😟', label: 'Poor Sleep', color: '#f44336' }
+  }
+
+  // Get stress level emoji and color
+  const getStressLevel = (value: number | null) => {
+    if (!value) return null
+    if (value <= 2) return { emoji: '😌', label: 'Low Stress', color: '#4caf50' }
+    if (value <= 3) return { emoji: '😊', label: 'Moderate Stress', color: '#8bc34a' }
+    if (value <= 4) return { emoji: '😰', label: 'High Stress', color: '#ff9800' }
+    return { emoji: '😫', label: 'Very High Stress', color: '#f44336' }
+  }
+
+  const sleepInfo = getSleepQuality(sleepQuality)
+  const stressInfo = getStressLevel(stressLevel)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -140,10 +177,42 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
   return (
     <form onSubmit={handleSubmit} noValidate>
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert 
+          severity="error" 
+          sx={{ 
+            mb: 2,
+            borderRadius: 2,
+          }}
+        >
           {error}
         </Alert>
       )}
+
+      {/* Progress Indicator */}
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+            Form Progress
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+            {Math.round(formProgress * 100)}%
+          </Typography>
+        </Box>
+        <LinearProgress 
+          variant="determinate" 
+          value={formProgress * 100} 
+          sx={{ 
+            height: 8, 
+            borderRadius: 4,
+            backgroundColor: '#e0e0e0',
+            '& .MuiLinearProgress-bar': {
+              borderRadius: 4,
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            },
+          }}
+        />
+      </Box>
+
       <Snackbar
         open={success}
         autoHideDuration={3000}
@@ -171,6 +240,7 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
         <Alert 
           severity="success" 
           onClose={() => setSuccess(false)}
+          icon={<CheckCircleIcon sx={{ color: '#fff', fontSize: '1.5rem' }} />}
           sx={{ 
             width: '100%',
             backgroundColor: 'transparent',
@@ -183,7 +253,14 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
             }
           }}
         >
-          Health factor added successfully!
+          <Box>
+            <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5 }}>
+              🎉 Health factors saved!
+            </Typography>
+            <Typography variant="body2">
+              Keep tracking daily to see patterns in your health!
+            </Typography>
+          </Box>
         </Alert>
       </Snackbar>
 
@@ -191,7 +268,7 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
         margin="normal"
         required
         fullWidth
-        label="Date"
+        label="📅 Date"
         type="date"
         value={date || ''}
         onChange={(e) => {
@@ -205,7 +282,7 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
           shrink: true,
         }}
         error={!!dateError}
-        helperText={dateError || ''}
+        helperText={dateError || 'Select the date for this entry'}
         inputProps={{
           min: '2000-01-01',
           max: new Date().toISOString().split('T')[0],
@@ -213,85 +290,207 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
         sx={{
           '& input[type="date"]': {
             color: date ? 'inherit' : 'transparent',
-          }
+          },
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 2,
+          },
         }}
       />
 
-      <Box sx={{ mt: 3, mb: 2 }}>
-        <Typography gutterBottom>
-          Sleep Quality: {sleepQuality ? `${sleepQuality}/5` : 'Not set'}
-        </Typography>
-        <Slider
-          value={sleepQuality || 3}
-          min={1}
-          max={5}
-          step={1}
-          marks={[
-            { value: 1, label: '1' },
-            { value: 3, label: '3' },
-            { value: 5, label: '5' },
-          ]}
-          onChange={(_, value) => setSleepQuality(value as number)}
-          valueLabelDisplay="auto"
-        />
-        <Typography variant="caption" color="text.secondary">
-          1 = Poor, 5 = Excellent
-        </Typography>
-      </Box>
+      <Card 
+        sx={{ 
+          mt: 3,
+          mb: 2,
+          background: sleepInfo 
+            ? `linear-gradient(135deg, ${sleepInfo.color}15 0%, ${sleepInfo.color}05 100%)`
+            : 'background.paper',
+          border: sleepInfo ? `2px solid ${sleepInfo.color}40` : '1px solid',
+          borderColor: 'divider',
+          borderRadius: 3,
+        }}
+      >
+        <CardContent>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+            <BedtimeIcon sx={{ fontSize: '2rem', color: sleepInfo?.color || 'text.secondary' }} />
+            <Box sx={{ flexGrow: 1 }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                😴 Sleep Quality
+              </Typography>
+              {sleepInfo && (
+                <Chip 
+                  label={`${sleepInfo.emoji} ${sleepInfo.label}`}
+                  size="small"
+                  sx={{ 
+                    backgroundColor: `${sleepInfo.color}20`,
+                    color: sleepInfo.color,
+                    fontWeight: 600,
+                  }}
+                />
+              )}
+            </Box>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: sleepInfo?.color || 'text.secondary' }}>
+              {sleepQuality ? `${sleepQuality}/5` : '—'}
+            </Typography>
+          </Box>
+          <Slider
+            value={sleepQuality || 3}
+            min={1}
+            max={5}
+            step={1}
+            marks={[
+              { value: 1, label: '😟' },
+              { value: 2, label: '😐' },
+              { value: 3, label: '😊' },
+              { value: 4, label: '😴' },
+              { value: 5, label: '✨' },
+            ]}
+            onChange={(_, value) => setSleepQuality(value as number)}
+            valueLabelDisplay="auto"
+            sx={{
+              '& .MuiSlider-thumb': {
+                width: 24,
+                height: 24,
+              },
+              '& .MuiSlider-valueLabel': {
+                backgroundColor: '#667eea',
+              },
+            }}
+          />
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+            💡 Rate your sleep from 1 (poor) to 5 (excellent)
+          </Typography>
+        </CardContent>
+      </Card>
 
-      <Box sx={{ mt: 3, mb: 2 }}>
-        <Typography gutterBottom>
-          Stress Level: {stressLevel ? `${stressLevel}/5` : 'Not set'}
-        </Typography>
-        <Slider
-          value={stressLevel || 3}
-          min={1}
-          max={5}
-          step={1}
-          marks={[
-            { value: 1, label: '1' },
-            { value: 3, label: '3' },
-            { value: 5, label: '5' },
-          ]}
-          onChange={(_, value) => setStressLevel(value as number)}
-          valueLabelDisplay="auto"
-        />
-        <Typography variant="caption" color="text.secondary">
-          1 = Low, 5 = Very High
-        </Typography>
-      </Box>
+      <Card 
+        sx={{ 
+          mt: 3,
+          mb: 2,
+          background: stressInfo 
+            ? `linear-gradient(135deg, ${stressInfo.color}15 0%, ${stressInfo.color}05 100%)`
+            : 'background.paper',
+          border: stressInfo ? `2px solid ${stressInfo.color}40` : '1px solid',
+          borderColor: 'divider',
+          borderRadius: 3,
+        }}
+      >
+        <CardContent>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+            <SentimentVeryDissatisfiedIcon sx={{ fontSize: '2rem', color: stressInfo?.color || 'text.secondary' }} />
+            <Box sx={{ flexGrow: 1 }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                😰 Stress Level
+              </Typography>
+              {stressInfo && (
+                <Chip 
+                  label={`${stressInfo.emoji} ${stressInfo.label}`}
+                  size="small"
+                  sx={{ 
+                    backgroundColor: `${stressInfo.color}20`,
+                    color: stressInfo.color,
+                    fontWeight: 600,
+                  }}
+                />
+              )}
+            </Box>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: stressInfo?.color || 'text.secondary' }}>
+              {stressLevel ? `${stressLevel}/5` : '—'}
+            </Typography>
+          </Box>
+          <Slider
+            value={stressLevel || 3}
+            min={1}
+            max={5}
+            step={1}
+            marks={[
+              { value: 1, label: '😌' },
+              { value: 2, label: '😊' },
+              { value: 3, label: '😐' },
+              { value: 4, label: '😰' },
+              { value: 5, label: '😫' },
+            ]}
+            onChange={(_, value) => setStressLevel(value as number)}
+            valueLabelDisplay="auto"
+            sx={{
+              '& .MuiSlider-thumb': {
+                width: 24,
+                height: 24,
+              },
+              '& .MuiSlider-valueLabel': {
+                backgroundColor: '#667eea',
+              },
+            }}
+          />
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+            💡 Rate your stress from 1 (low) to 5 (very high)
+          </Typography>
+        </CardContent>
+      </Card>
 
       <TextField
         margin="normal"
         fullWidth
-        label="Exercise Duration (minutes)"
+        label={
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <FitnessCenterIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />
+            <span>Exercise Duration (minutes)</span>
+          </Box>
+        }
         type="number"
         value={exerciseDuration}
         onChange={(e) => setExerciseDuration(e.target.value)}
         inputProps={{ min: 0, max: 600 }}
-        helperText="Enter exercise duration in minutes"
+        helperText="💪 Optional: How many minutes did you exercise today?"
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 2,
+          },
+        }}
       />
 
       <TextField
         margin="normal"
         fullWidth
-        label="Notes (optional)"
+        label="📝 Notes (optional)"
         multiline
         rows={3}
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
-        placeholder="e.g., morning walk, stressful meeting, late night"
+        placeholder="💡 Add context: e.g., 'Morning walk in the park', 'Stressful meeting at work', 'Late night, couldn't sleep'"
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 2,
+          },
+        }}
       />
 
       <Button
         type="submit"
         fullWidth
         variant="contained"
-        disabled={loading}
-        sx={{ mt: 2 }}
-        startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
+        disabled={loading || !date}
+        sx={{ 
+          mt: 3,
+          mb: 2,
+          py: 1.5,
+          borderRadius: 2,
+          fontSize: '1rem',
+          fontWeight: 600,
+          textTransform: 'none',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)',
+          '&:hover': {
+            boxShadow: '0 6px 16px rgba(102, 126, 234, 0.5)',
+            transform: 'translateY(-1px)',
+          },
+          '&:disabled': {
+            background: 'rgba(102, 126, 234, 0.5)',
+          },
+          transition: 'all 0.2s ease',
+        }}
+        startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <CheckCircleIcon />}
       >
-        {loading ? 'Adding...' : 'Add Health Factors'}
+        {loading ? 'Saving...' : '💾 Save Health Factors'}
       </Button>
     </form>
   )
