@@ -56,7 +56,7 @@ const Insights: React.FC<InsightsProps> = ({ onUpdate }) => {
   const [summaryLoading, setSummaryLoading] = useState(false)
   
   // Use ref to track polling interval so we can clear it
-  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const pollIntervalRef = useRef<number | null>(null)
 
   const fetchInsights = async () => {
     try {
@@ -710,6 +710,7 @@ const Insights: React.FC<InsightsProps> = ({ onUpdate }) => {
           startIcon={generating ? <CircularProgress size={20} color="inherit" /> : <AutoAwesomeIcon />}
           onClick={handleGenerateInsights}
           disabled={generating}
+          fullWidth={isMobile}
           sx={{
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             color: 'white',
@@ -728,7 +729,6 @@ const Insights: React.FC<InsightsProps> = ({ onUpdate }) => {
               background: 'rgba(102, 126, 234, 0.5)',
             },
             transition: 'all 0.2s ease',
-            fullWidth: isMobile,
           }}
         >
           {generating ? (generationStatus || 'Generating...') : 'Generate Insights'}
