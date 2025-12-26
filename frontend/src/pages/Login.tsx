@@ -36,109 +36,185 @@ const Login = () => {
   }
 
   return (
-    <Container 
-      component="main" 
-      maxWidth="xs"
-      sx={{ px: { xs: 2, sm: 3 } }}
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        py: { xs: 4, sm: 6 },
+        px: { xs: 2, sm: 3 },
+      }}
     >
-      <Box
-        sx={{
-          marginTop: { xs: 4, sm: 8 },
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
+      <Container 
+        component="main" 
+        maxWidth="xs"
       >
-        <Typography 
-          component="h1" 
-          variant="h4" 
-          gutterBottom 
-          sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: 1,
-            fontSize: { xs: '1.5rem', sm: '2.125rem' }
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
           }}
         >
-          <FavoriteIcon sx={{ color: '#d32f2f', fontSize: { xs: '1.5rem', sm: '2rem' } }} /> 
-          Cardiac Monitor
-        </Typography>
-        <Typography 
-          component="h2" 
-          variant="h6" 
-          color="text.secondary" 
-          gutterBottom
-          sx={{ fontSize: { xs: '0.875rem', sm: '1.25rem' } }}
-        >
-          Cardiac Health Monitoring
-        </Typography>
-        <Paper 
-          elevation={3} 
-          sx={{ 
-            padding: { xs: 2, sm: 4 }, 
-            marginTop: 2, 
-            width: '100%' 
-          }}
-        >
-          <Typography 
-            component="h2" 
-            variant="h5" 
-            gutterBottom
-            sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}
+          <Box
+            sx={{
+              mb: 3,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+            }}
           >
-            Sign In
-          </Typography>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-          <form onSubmit={handleSubmit}>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="Email Address"
-              name="email"
-              autoComplete="email"
-              autoFocus
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Password"
-              type="password"
-              id="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              disabled={loading}
-              sx={{ mt: 3, mb: 2 }}
-              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
+            <Box
+              sx={{
+                width: { xs: 56, sm: 64 },
+                height: { xs: 56, sm: 64 },
+                borderRadius: 2,
+                background: 'rgba(255, 255, 255, 0.2)',
+                backdropFilter: 'blur(10px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+              }}
             >
-              {loading ? 'Signing In...' : 'Sign In'}
-            </Button>
-            <Box textAlign="center">
-              <Link to="/register" style={{ textDecoration: 'none' }}>
-                <Typography variant="body2" color="primary">
-                  Don't have an account? Sign Up
-                </Typography>
-              </Link>
+              <FavoriteIcon sx={{ color: 'white', fontSize: { xs: '2rem', sm: '2.5rem' } }} />
             </Box>
-          </form>
-        </Paper>
-      </Box>
-    </Container>
+            <Typography 
+              component="h1" 
+              variant="h4" 
+              sx={{ 
+                color: 'white',
+                fontWeight: 700,
+                fontSize: { xs: '1.75rem', sm: '2.125rem' },
+                textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+              }}
+            >
+              Cardiac Monitor
+            </Typography>
+          </Box>
+          
+          <Paper 
+            elevation={24}
+            sx={{ 
+              padding: { xs: 3, sm: 4 }, 
+              width: '100%',
+              borderRadius: 3,
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+            }}
+          >
+            <Typography 
+              component="h2" 
+              variant="h5" 
+              gutterBottom
+              sx={{ 
+                fontSize: { xs: '1.5rem', sm: '1.75rem' },
+                fontWeight: 700,
+                mb: 3,
+                textAlign: 'center',
+                color: 'text.primary',
+              }}
+            >
+              Welcome Back
+            </Typography>
+            
+            {error && (
+              <Alert 
+                severity="error" 
+                sx={{ 
+                  mb: 2,
+                  borderRadius: 2,
+                }}
+              >
+                {error}
+              </Alert>
+            )}
+            
+            <form onSubmit={handleSubmit}>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="email"
+                label="Email Address"
+                name="email"
+                autoComplete="email"
+                autoFocus
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                  },
+                }}
+              />
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                name="password"
+                label="Password"
+                type="password"
+                id="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                  },
+                }}
+              />
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                disabled={loading}
+                sx={{ 
+                  mt: 3, 
+                  mb: 2,
+                  py: 1.5,
+                  borderRadius: 2,
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)',
+                  '&:hover': {
+                    boxShadow: '0 6px 16px rgba(102, 126, 234, 0.5)',
+                    transform: 'translateY(-1px)',
+                  },
+                  '&:disabled': {
+                    background: 'rgba(102, 126, 234, 0.5)',
+                  },
+                  transition: 'all 0.2s ease',
+                }}
+                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
+              >
+                {loading ? 'Signing In...' : 'Sign In'}
+              </Button>
+              <Box textAlign="center" mt={2}>
+                <Link to="/register" style={{ textDecoration: 'none' }}>
+                  <Typography 
+                    variant="body2" 
+                    sx={{
+                      color: 'primary.main',
+                      fontWeight: 500,
+                      '&:hover': {
+                        textDecoration: 'underline',
+                      },
+                    }}
+                  >
+                    Don't have an account? Sign Up
+                  </Typography>
+                </Link>
+              </Box>
+            </form>
+          </Paper>
+        </Box>
+      </Container>
+    </Box>
   )
 }
 
