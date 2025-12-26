@@ -11,11 +11,7 @@ import {
   Filler,
 } from 'chart.js'
 import { Line } from 'react-chartjs-2'
-import { Box, Typography, ButtonGroup, Button, Paper, Card, CardContent, Chip, Grid } from '@mui/material'
-import FavoriteIcon from '@mui/icons-material/Favorite'
-import TrendingUpIcon from '@mui/icons-material/TrendingUp'
-import TrendingDownIcon from '@mui/icons-material/TrendingDown'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import { Box, Typography, ButtonGroup, Button, Paper } from '@mui/material'
 import { BloodPressureReading } from '../types'
 import { format, subDays, subMonths, subYears, startOfDay, endOfDay } from 'date-fns'
 
@@ -197,13 +193,7 @@ const PulseRateChart: React.FC<PulseRateChartProps> = ({ readings }) => {
         position: 'top' as const,
       },
       title: {
-        display: true,
-        text: `💓 Your Heart Rate Journey (${filteredReadings.length} readings)`,
-        font: {
-          size: 16,
-          weight: 'bold' as const,
-        },
-        color: '#333',
+        display: false,
       },
       tooltip: {
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -213,26 +203,21 @@ const PulseRateChart: React.FC<PulseRateChartProps> = ({ readings }) => {
           title: (context: any) => {
             const index = context[0].dataIndex
             const reading = filteredReadings[index]
-            return `📅 ${format(new Date(reading.recorded_at), 'MMM dd, yyyy h:mm a')}`
+            return format(new Date(reading.recorded_at), 'MMM dd, yyyy h:mm a')
           },
           label: (context: any) => {
             const heartRate = context.parsed.y
             let category = ''
-            let emoji = ''
             if (heartRate < 60) {
               category = 'Below Normal (Bradycardia)'
-              emoji = '🔵'
             } else if (heartRate <= 100) {
               category = 'Normal'
-              emoji = '✅'
             } else if (heartRate <= 120) {
               category = 'Elevated'
-              emoji = '⚠️'
             } else {
               category = 'High (Tachycardia)'
-              emoji = '🔴'
             }
-            return `${emoji} ${context.dataset.label}: ${heartRate} BPM - ${category}`
+            return `${context.dataset.label}: ${heartRate} BPM - ${category}`
           },
         },
       },
@@ -269,21 +254,12 @@ const PulseRateChart: React.FC<PulseRateChartProps> = ({ readings }) => {
         }}
       >
         <Box textAlign="center">
-          <FavoriteIcon sx={{ fontSize: 64, color: '#e91e63', mb: 2, opacity: 0.5 }} />
           <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: '#333' }}>
-            💓 No Heart Rate Data Yet
+            No Heart Rate Data Yet
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-            Add heart rate when recording your blood pressure to track your pulse!
+          <Typography variant="body1" color="text.secondary">
+            Add heart rate when recording your blood pressure to track your pulse.
           </Typography>
-          <Chip 
-            label="💡 Include heart rate in your next reading"
-            sx={{ 
-              backgroundColor: 'rgba(233, 30, 99, 0.1)',
-              color: '#e91e63',
-              fontWeight: 600,
-            }}
-          />
         </Box>
       </Paper>
     )
@@ -291,91 +267,21 @@ const PulseRateChart: React.FC<PulseRateChartProps> = ({ readings }) => {
 
   return (
     <Box>
-      {/* Statistics Cards */}
+      {/* Statistics - Simplified */}
       {stats && (
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={12} sm={4}>
-            <Card 
-              sx={{ 
-                background: stats.normalPercentage >= 70 
-                  ? 'linear-gradient(135deg, #4caf5015 0%, #4caf5005 100%)'
-                  : 'linear-gradient(135deg, #ff980015 0%, #ff980005 100%)',
-                border: `2px solid ${stats.normalPercentage >= 70 ? '#4caf5040' : '#ff980040'}`,
-                borderRadius: 3,
-              }}
-            >
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                  <CheckCircleIcon sx={{ color: stats.normalPercentage >= 70 ? '#4caf50' : '#ff9800' }} />
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: stats.normalPercentage >= 70 ? '#4caf50' : '#ff9800' }}>
-                    {stats.normalPercentage}%
-                  </Typography>
-                </Box>
-                <Typography variant="body2" color="text.secondary">
-                  {stats.normalPercentage >= 70 ? '✅ Normal Range' : '⚠️ Keep Tracking!'}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <Card 
-              sx={{ 
-                background: 'linear-gradient(135deg, #e91e6315 0%, #ad145705 100%)',
-                border: '2px solid #e91e6340',
-                borderRadius: 3,
-              }}
-            >
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                  <FavoriteIcon sx={{ color: '#e91e63' }} />
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#e91e63' }}>
-                    {stats.avgHeartRate} BPM
-                  </Typography>
-                </Box>
-                <Typography variant="body2" color="text.secondary">
-                  💓 Average Heart Rate
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <Card 
-              sx={{ 
-                background: stats.trend === 'improving' 
-                  ? 'linear-gradient(135deg, #4caf5015 0%, #4caf5005 100%)'
-                  : stats.trend === 'increasing'
-                  ? 'linear-gradient(135deg, #ff980015 0%, #ff980005 100%)'
-                  : 'linear-gradient(135deg, #75757515 0%, #75757505 100%)',
-                border: `2px solid ${stats.trend === 'improving' ? '#4caf5040' : stats.trend === 'increasing' ? '#ff980040' : '#75757540'}`,
-                borderRadius: 3,
-              }}
-            >
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                  {stats.trend === 'improving' ? (
-                    <TrendingDownIcon sx={{ color: '#4caf50' }} />
-                  ) : stats.trend === 'increasing' ? (
-                    <TrendingUpIcon sx={{ color: '#ff9800' }} />
-                  ) : (
-                    <TrendingUpIcon sx={{ color: '#757575', transform: 'rotate(90deg)' }} />
-                  )}
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      fontWeight: 700,
-                      color: stats.trend === 'improving' ? '#4caf50' : stats.trend === 'increasing' ? '#ff9800' : '#757575'
-                    }}
-                  >
-                    {stats.trend === 'improving' ? '📉 Improving' : stats.trend === 'increasing' ? '📈 Increasing' : '➡️ Stable'}
-                  </Typography>
-                </Box>
-                <Typography variant="body2" color="text.secondary">
-                  Trend: {stats.trendValue} BPM
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+        <Box sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 2.5, alignItems: 'center' }}>
+          <Typography variant="body2" color="text.secondary">
+            <strong style={{ color: '#333', fontSize: '1.1em' }}>{stats.normalPercentage}%</strong> normal
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mx: 0.5 }}>•</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Average: <strong style={{ color: '#333', fontSize: '1.1em' }}>{stats.avgHeartRate} BPM</strong>
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mx: 0.5 }}>•</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Trend: <strong style={{ color: '#333', fontSize: '1.1em' }}>{stats.trend === 'improving' ? 'Improving' : stats.trend === 'increasing' ? 'Increasing' : 'Stable'}</strong> ({stats.trendValue} BPM)
+          </Typography>
+        </Box>
       )}
 
       <Paper 
@@ -435,7 +341,7 @@ const PulseRateChart: React.FC<PulseRateChartProps> = ({ readings }) => {
               }),
             }}
           >
-            📅 7 Days
+            7 Days
           </Button>
           <Button
             variant={timePeriod === '30d' ? 'contained' : 'outlined'}
@@ -449,7 +355,7 @@ const PulseRateChart: React.FC<PulseRateChartProps> = ({ readings }) => {
               }),
             }}
           >
-            📅 30 Days
+            30 Days
           </Button>
           <Button
             variant={timePeriod === '90d' ? 'contained' : 'outlined'}
@@ -463,7 +369,7 @@ const PulseRateChart: React.FC<PulseRateChartProps> = ({ readings }) => {
               }),
             }}
           >
-            📅 90 Days
+            90 Days
           </Button>
           <Button
             variant={timePeriod === '1y' ? 'contained' : 'outlined'}
@@ -477,7 +383,7 @@ const PulseRateChart: React.FC<PulseRateChartProps> = ({ readings }) => {
               }),
             }}
           >
-            📅 1 Year
+            1 Year
           </Button>
           <Button
             variant={timePeriod === 'all' ? 'contained' : 'outlined'}
@@ -491,7 +397,7 @@ const PulseRateChart: React.FC<PulseRateChartProps> = ({ readings }) => {
               }),
             }}
           >
-            📊 All Time
+            All Time
           </Button>
           <Button
             variant={timePeriod === 'custom' ? 'contained' : 'outlined'}
@@ -505,7 +411,7 @@ const PulseRateChart: React.FC<PulseRateChartProps> = ({ readings }) => {
               }),
             }}
           >
-            🎯 Custom
+            Custom
           </Button>
           </ButtonGroup>
         </Box>
@@ -544,43 +450,10 @@ const PulseRateChart: React.FC<PulseRateChartProps> = ({ readings }) => {
         <Line data={chartData} options={options} />
       </Box>
 
-      <Box mt={3}>
-        <Card 
-          sx={{ 
-            p: 2,
-            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-            borderRadius: 2,
-          }}
-        >
-          <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-            🎨 Color Guide:
-          </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mb: 1.5 }}>
-            <Chip 
-              label="🔵 Blue = Below Normal (<60 BPM)"
-              size="small"
-              sx={{ backgroundColor: '#2196f320', color: '#1565c0', fontWeight: 600 }}
-            />
-            <Chip 
-              label="✅ Green = Normal (60-100 BPM)"
-              size="small"
-              sx={{ backgroundColor: '#4caf5020', color: '#2e7d32', fontWeight: 600 }}
-            />
-            <Chip 
-              label="⚠️ Orange = Elevated (100-120 BPM)"
-              size="small"
-              sx={{ backgroundColor: '#ff980020', color: '#f57c00', fontWeight: 600 }}
-            />
-            <Chip 
-              label="🔴 Red = High (>120 BPM)"
-              size="small"
-              sx={{ backgroundColor: '#f4433620', color: '#c62828', fontWeight: 600 }}
-            />
-          </Box>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-            💡 Normal resting heart rate for adults is typically 60-100 BPM. Hover over points for details!
-          </Typography>
-        </Card>
+      <Box mt={2}>
+        <Typography variant="caption" color="text.secondary">
+          Normal resting heart rate for adults is typically 60-100 BPM. Blue = Below Normal (&lt;60), Green = Normal (60-100), Orange = Elevated (100-120), Red = High (&gt;120). Hover over points for details.
+        </Typography>
       </Box>
     </Paper>
     </Box>

@@ -17,9 +17,6 @@ import {
   Chip,
 } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-import MedicationIcon from '@mui/icons-material/Medication'
-import LocalPharmacyIcon from '@mui/icons-material/LocalPharmacy'
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
 import apiClient from '../config/axios'
 import { Medication } from '../types'
 
@@ -257,7 +254,7 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
         >
           <Box>
             <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5 }}>
-              🎉 Medication {initialData?.id ? 'updated' : 'added'} successfully!
+              Medication {initialData?.id ? 'updated' : 'added'} successfully!
             </Typography>
             <Typography variant="body2">
               {initialData?.id 
@@ -273,16 +270,11 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
           <TextField
             required
             fullWidth
-            label={
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <MedicationIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />
-                <span>Medication Name</span>
-              </Box>
-            }
+            label="Medication Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g., Lisinopril, Aspirin, Metformin"
-            helperText="💊 Enter the name of your medication"
+            helperText="Enter the name of your medication"
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: 2,
@@ -295,16 +287,11 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
           <TextField
             required
             fullWidth
-            label={
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <LocalPharmacyIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />
-                <span>Dosage</span>
-              </Box>
-            }
+            label="Dosage"
             value={dosage}
             onChange={(e) => setDosage(e.target.value)}
             placeholder="e.g., 10mg, 1 tablet, 2 capsules"
-            helperText="💉 How much do you take?"
+            helperText="How much do you take?"
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: 2,
@@ -318,7 +305,7 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
             required
             fullWidth
             select
-            label="⏰ Frequency"
+            label="Frequency"
             value={frequency}
             onChange={(e) => setFrequency(e.target.value as Medication['frequency'])}
             helperText="How often do you take it?"
@@ -340,19 +327,14 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
           <TextField
             required
             fullWidth
-            label={
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <CalendarTodayIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />
-                <span>Start Date</span>
-              </Box>
-            }
+            label="Start Date"
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
             InputLabelProps={{
               shrink: true,
             }}
-            helperText="📅 When did you start taking this?"
+            helperText="When did you start taking this?"
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: 2,
@@ -364,7 +346,7 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
         <Grid item xs={12} sm={6}>
           <TextField
             fullWidth
-            label="📅 End Date (if stopped)"
+            label="End Date (if stopped)"
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
@@ -408,16 +390,9 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
                 />
               }
               label={
-                <Box>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {isActive ? '✅ Active Medication' : '⏸️ Inactive Medication'}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {isActive 
-                      ? 'You are currently taking this medication'
-                      : 'You are not currently taking this medication'}
-                  </Typography>
-                </Box>
+                <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                  {isActive ? 'Active Medication' : 'Inactive Medication'}
+                </Typography>
               }
             />
           </Card>
@@ -426,12 +401,12 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
         <Grid item xs={12}>
           <TextField
             fullWidth
-            label="📝 Notes (optional)"
+            label="Notes (optional)"
             multiline
             rows={3}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="💡 Add helpful reminders: e.g., 'Take with food', 'Avoid alcohol', 'Take in the morning'"
+            placeholder="Add helpful reminders: e.g., 'Take with food', 'Avoid alcohol', 'Take in the morning'"
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: 2,
@@ -481,7 +456,7 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
             >
               {loading 
                 ? (initialData?.id ? 'Updating...' : 'Saving...') 
-                : `💾 ${initialData?.id ? 'Update' : 'Save'} Medication`}
+                : `${initialData?.id ? 'Update' : 'Save'} Medication`}
             </Button>
           </Box>
         </Grid>

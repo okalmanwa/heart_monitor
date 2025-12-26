@@ -14,9 +14,6 @@ import {
   LinearProgress,
   Chip,
 } from '@mui/material'
-import BedtimeIcon from '@mui/icons-material/Bedtime'
-import SentimentVeryDissatisfiedIcon from '@mui/icons-material/SentimentVeryDissatisfied'
-import FitnessCenterIcon from '@mui/icons-material/FitnessCenter'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import apiClient from '../config/axios'
 import { HealthFactor } from '../types'
@@ -48,22 +45,22 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
     exerciseDuration || notes,
   ].filter(Boolean).length / 4
 
-  // Get sleep quality emoji and color
+  // Get sleep quality label and color
   const getSleepQuality = (value: number | null) => {
     if (!value) return null
-    if (value >= 4) return { emoji: '😴', label: 'Great Sleep!', color: '#4caf50' }
-    if (value >= 3) return { emoji: '😊', label: 'Good Sleep', color: '#8bc34a' }
-    if (value >= 2) return { emoji: '😐', label: 'Okay Sleep', color: '#ff9800' }
-    return { emoji: '😟', label: 'Poor Sleep', color: '#f44336' }
+    if (value >= 4) return { label: 'Excellent', color: '#4caf50' }
+    if (value >= 3) return { label: 'Good', color: '#8bc34a' }
+    if (value >= 2) return { label: 'Fair', color: '#ff9800' }
+    return { label: 'Poor', color: '#f44336' }
   }
 
-  // Get stress level emoji and color
+  // Get stress level label and color
   const getStressLevel = (value: number | null) => {
     if (!value) return null
-    if (value <= 2) return { emoji: '😌', label: 'Low Stress', color: '#4caf50' }
-    if (value <= 3) return { emoji: '😊', label: 'Moderate Stress', color: '#8bc34a' }
-    if (value <= 4) return { emoji: '😰', label: 'High Stress', color: '#ff9800' }
-    return { emoji: '😫', label: 'Very High Stress', color: '#f44336' }
+    if (value <= 2) return { label: 'Low', color: '#4caf50' }
+    if (value <= 3) return { label: 'Moderate', color: '#8bc34a' }
+    if (value <= 4) return { label: 'High', color: '#ff9800' }
+    return { label: 'Very High', color: '#f44336' }
   }
 
   const sleepInfo = getSleepQuality(sleepQuality)
@@ -255,10 +252,10 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
         >
           <Box>
             <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5 }}>
-              🎉 Health factors saved!
+              Health factors saved!
             </Typography>
             <Typography variant="body2">
-              Keep tracking daily to see patterns in your health!
+              Keep tracking daily to see patterns in your health.
             </Typography>
           </Box>
         </Alert>
@@ -268,7 +265,7 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
         margin="normal"
         required
         fullWidth
-        label="📅 Date"
+        label="Date"
         type="date"
         value={date || ''}
         onChange={(e) => {
@@ -310,15 +307,14 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
         }}
       >
         <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-            <BedtimeIcon sx={{ fontSize: '2rem', color: sleepInfo?.color || 'text.secondary' }} />
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
             <Box sx={{ flexGrow: 1 }}>
               <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-                😴 Sleep Quality
+                Sleep Quality
               </Typography>
               {sleepInfo && (
                 <Chip 
-                  label={`${sleepInfo.emoji} ${sleepInfo.label}`}
+                  label={sleepInfo.label}
                   size="small"
                   sx={{ 
                     backgroundColor: `${sleepInfo.color}20`,
@@ -338,11 +334,11 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
             max={5}
             step={1}
             marks={[
-              { value: 1, label: '😟' },
-              { value: 2, label: '😐' },
-              { value: 3, label: '😊' },
-              { value: 4, label: '😴' },
-              { value: 5, label: '✨' },
+              { value: 1, label: '1' },
+              { value: 2, label: '2' },
+              { value: 3, label: '3' },
+              { value: 4, label: '4' },
+              { value: 5, label: '5' },
             ]}
             onChange={(_, value) => setSleepQuality(value as number)}
             valueLabelDisplay="auto"
@@ -357,7 +353,7 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
             }}
           />
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-            💡 Rate your sleep from 1 (poor) to 5 (excellent)
+            Rate your sleep from 1 (poor) to 5 (excellent)
           </Typography>
         </CardContent>
       </Card>
@@ -375,15 +371,14 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
         }}
       >
         <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-            <SentimentVeryDissatisfiedIcon sx={{ fontSize: '2rem', color: stressInfo?.color || 'text.secondary' }} />
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
             <Box sx={{ flexGrow: 1 }}>
               <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-                😰 Stress Level
+                Stress Level
               </Typography>
               {stressInfo && (
                 <Chip 
-                  label={`${stressInfo.emoji} ${stressInfo.label}`}
+                  label={stressInfo.label}
                   size="small"
                   sx={{ 
                     backgroundColor: `${stressInfo.color}20`,
@@ -403,11 +398,11 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
             max={5}
             step={1}
             marks={[
-              { value: 1, label: '😌' },
-              { value: 2, label: '😊' },
-              { value: 3, label: '😐' },
-              { value: 4, label: '😰' },
-              { value: 5, label: '😫' },
+              { value: 1, label: '1' },
+              { value: 2, label: '2' },
+              { value: 3, label: '3' },
+              { value: 4, label: '4' },
+              { value: 5, label: '5' },
             ]}
             onChange={(_, value) => setStressLevel(value as number)}
             valueLabelDisplay="auto"
@@ -422,7 +417,7 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
             }}
           />
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-            💡 Rate your stress from 1 (low) to 5 (very high)
+            Rate your stress from 1 (low) to 5 (very high)
           </Typography>
         </CardContent>
       </Card>
@@ -430,17 +425,12 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
       <TextField
         margin="normal"
         fullWidth
-        label={
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <FitnessCenterIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />
-            <span>Exercise Duration (minutes)</span>
-          </Box>
-        }
+        label="Exercise Duration (minutes)"
         type="number"
         value={exerciseDuration}
         onChange={(e) => setExerciseDuration(e.target.value)}
         inputProps={{ min: 0, max: 600 }}
-        helperText="💪 Optional: How many minutes did you exercise today?"
+        helperText="Optional: How many minutes did you exercise today?"
         sx={{
           '& .MuiOutlinedInput-root': {
             borderRadius: 2,
@@ -451,12 +441,12 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
       <TextField
         margin="normal"
         fullWidth
-        label="📝 Notes (optional)"
+        label="Notes (optional)"
         multiline
         rows={3}
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
-        placeholder="💡 Add context: e.g., 'Morning walk in the park', 'Stressful meeting at work', 'Late night, couldn't sleep'"
+        placeholder="Add context: e.g., 'Morning walk in the park', 'Stressful meeting at work', 'Late night, couldn't sleep'"
         sx={{
           '& .MuiOutlinedInput-root': {
             borderRadius: 2,
@@ -490,7 +480,7 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
         }}
         startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <CheckCircleIcon />}
       >
-        {loading ? 'Saving...' : '💾 Save Health Factors'}
+        {loading ? 'Saving...' : 'Save Health Factors'}
       </Button>
     </form>
   )

@@ -11,10 +11,7 @@ import {
   Legend,
 } from 'chart.js'
 import { Scatter, Bar } from 'react-chartjs-2'
-import { Box, Typography, Paper, Tabs, Tab, Card, CardContent, Chip } from '@mui/material'
-import BedtimeIcon from '@mui/icons-material/Bedtime'
-import SentimentVeryDissatisfiedIcon from '@mui/icons-material/SentimentVeryDissatisfied'
-import FitnessCenterIcon from '@mui/icons-material/FitnessCenter'
+import { Box, Typography, Paper, Tabs, Tab } from '@mui/material'
 import { BloodPressureReading, HealthFactor } from '../types'
 import { format, isSameDay } from 'date-fns'
 import { useState } from 'react'
@@ -152,13 +149,7 @@ const CorrelationChart: React.FC<CorrelationChartProps> = ({
         position: 'top' as const,
       },
       title: {
-        display: true,
-        text: '🔍 Discover Health Patterns',
-        font: {
-          size: 16,
-          weight: 'bold' as const,
-        },
-        color: '#333',
+        display: false,
       },
     },
     scales: {
@@ -189,13 +180,7 @@ const CorrelationChart: React.FC<CorrelationChartProps> = ({
         position: 'top' as const,
       },
       title: {
-        display: true,
-        text: '💪 Exercise Impact on Blood Pressure',
-        font: {
-          size: 16,
-          weight: 'bold' as const,
-        },
-        color: '#333',
+        display: false,
       },
     },
     scales: {
@@ -220,25 +205,12 @@ const CorrelationChart: React.FC<CorrelationChartProps> = ({
         }}
       >
         <Box textAlign="center">
-          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 2 }}>
-            <BedtimeIcon sx={{ fontSize: 48, color: '#667eea', opacity: 0.5 }} />
-            <FitnessCenterIcon sx={{ fontSize: 48, color: '#667eea', opacity: 0.5 }} />
-            <SentimentVeryDissatisfiedIcon sx={{ fontSize: 48, color: '#667eea', opacity: 0.5 }} />
-          </Box>
           <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: '#333' }}>
-            🔍 No Correlation Data Yet
+            No Correlation Data Yet
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-            Track both blood pressure and health factors on the same dates to discover patterns!
+          <Typography variant="body1" color="text.secondary">
+            Track both blood pressure and health factors on the same dates to discover patterns.
           </Typography>
-          <Chip 
-            label="💡 Tip: Record BP and health factors on the same day"
-            sx={{ 
-              backgroundColor: 'rgba(102, 126, 234, 0.1)',
-              color: '#667eea',
-              fontWeight: 600,
-            }}
-          />
         </Box>
       </Paper>
     )
@@ -254,55 +226,30 @@ const CorrelationChart: React.FC<CorrelationChartProps> = ({
           mb: 2,
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-          <Box
-            sx={{
-              width: 48,
-              height: 48,
-              borderRadius: 2,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+        <Box sx={{ mb: 2 }}>
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              fontSize: { xs: '1.2rem', sm: '1.4rem' },
+              fontWeight: 700,
+              mb: 0.5,
             }}
           >
-            <Typography sx={{ fontSize: '1.5rem' }}>🔍</Typography>
-          </Box>
-          <Box>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                fontSize: { xs: '1.2rem', sm: '1.4rem' },
-                fontWeight: 700,
-              }}
-            >
-              Health Pattern Discovery
-            </Typography>
-            <Typography 
-              variant="body2" 
-              color="text.secondary"
-            >
-              See how sleep, stress, and exercise affect your blood pressure
-            </Typography>
-          </Box>
+            Health Pattern Discovery
+          </Typography>
+          <Typography 
+            variant="body2" 
+            color="text.secondary"
+          >
+            See how sleep, stress, and exercise affect your blood pressure
+          </Typography>
         </Box>
         
-        <Card 
-          sx={{ 
-            p: 2,
-            mb: 2,
-            background: 'linear-gradient(135deg, #667eea15 0%, #764ba205 100%)',
-            border: '2px solid #667eea40',
-            borderRadius: 2,
-          }}
-        >
-          <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
-            📊 Data Summary
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="body2" color="text.secondary">
             Analyzing {matchedData.length} day{matchedData.length !== 1 ? 's' : ''} with both BP readings and health factors
           </Typography>
-        </Card>
+        </Box>
 
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2, overflowX: 'auto', width: '100%' }}>
           <Tabs 
@@ -329,21 +276,9 @@ const CorrelationChart: React.FC<CorrelationChartProps> = ({
               },
             }}
           >
-            <Tab 
-              icon={<BedtimeIcon sx={{ fontSize: '1.2rem', mr: 0.5 }} />}
-              iconPosition="start"
-              label="😴 Sleep Quality" 
-            />
-            <Tab 
-              icon={<SentimentVeryDissatisfiedIcon sx={{ fontSize: '1.2rem', mr: 0.5 }} />}
-              iconPosition="start"
-              label="😰 Stress Level" 
-            />
-            <Tab 
-              icon={<FitnessCenterIcon sx={{ fontSize: '1.2rem', mr: 0.5 }} />}
-              iconPosition="start"
-              label="💪 Exercise" 
-            />
+            <Tab label="Sleep Quality" />
+            <Tab label="Stress Level" />
+            <Tab label="Exercise" />
           </Tabs>
         </Box>
 
@@ -359,26 +294,16 @@ const CorrelationChart: React.FC<CorrelationChartProps> = ({
           )}
         </Box>
 
-        <Card 
-          sx={{ 
-            mt: 3,
-            p: 2,
-            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-            borderRadius: 2,
-          }}
-        >
-          <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-            💡 How to Read This Chart:
-          </Typography>
+        <Box mt={2}>
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-            {activeTab === 0 && '😴 Better sleep quality (higher number) often correlates with lower blood pressure. Look for patterns!'}
-            {activeTab === 1 && '😰 Higher stress levels may correlate with elevated blood pressure. Track both to see connections!'}
-            {activeTab === 2 && '💪 More exercise often helps maintain healthier blood pressure. See how your activity affects your BP!'}
+            {activeTab === 0 && 'Better sleep quality (higher number) often correlates with lower blood pressure. Look for patterns.'}
+            {activeTab === 1 && 'Higher stress levels may correlate with elevated blood pressure. Track both to see connections.'}
+            {activeTab === 2 && 'More exercise often helps maintain healthier blood pressure. See how your activity affects your BP.'}
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-            Hover over data points to see specific values and discover your personal health patterns!
+            Hover over data points to see specific values and discover your personal health patterns.
           </Typography>
-        </Card>
+        </Box>
       </Paper>
     </Box>
   )

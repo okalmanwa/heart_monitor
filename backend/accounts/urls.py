@@ -12,6 +12,9 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     path('profile/update/', views.UserProfileUpdateView.as_view(), name='profile-update'),
     path('admin-check/', views.admin_check, name='admin_check'),
+    path('password-reset/request/', views.request_password_reset, name='request_password_reset'),
+    path('password-reset/confirm/', views.reset_password, name='reset_password'),
+    path('test-email/', views.test_email_config, name='test_email_config'),
     path('', include(router.urls)),
 ]
 

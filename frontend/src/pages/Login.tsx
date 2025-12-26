@@ -9,15 +9,24 @@ import {
   Box,
   Alert,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material'
 import FavoriteIcon from '@mui/icons-material/Favorite'
 import { useAuth } from '../contexts/AuthContext'
+import apiClient from '../config/axios'
 
 const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetLoading, setResetLoading] = useState(false)
+  const [resetMessage, setResetMessage] = useState('')
   const { login } = useAuth()
   const navigate = useNavigate()
 
@@ -32,6 +41,38 @@ const Login = () => {
       setError(err.response?.data?.detail || 'Login failed. Please try again.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setResetMessage('')
+    setResetLoading(true)
+    try {
+      const response = await apiClient.post('/api/auth/password-reset/request/', {
+        email: resetEmail,
+      })
+      
+      let message = response.data.message || 'If an account exists with this email, a password reset link has been sent.'
+      
+      // In development, show the reset link if provided
+      if (response.data.dev_reset_link) {
+        message = `${response.data.dev_message}\n\nReset Link: ${response.data.dev_reset_link}`
+      }
+      
+      setResetMessage(message)
+      
+      // If dev link provided, keep dialog open longer so user can copy link
+      const timeout = response.data.dev_reset_link ? 10000 : 3000
+      setTimeout(() => {
+        setForgotPasswordOpen(false)
+        setResetEmail('')
+        setResetMessage('')
+      }, timeout)
+    } catch (err: any) {
+      setResetMessage(err.response?.data?.error || 'Failed to send reset email. Please try again.')
+    } finally {
+      setResetLoading(false)
     }
   }
 
@@ -166,6 +207,22 @@ const Login = () => {
                   },
                 }}
               />
+              <Box textAlign="right" mt={1}>
+                <Typography
+                  variant="body2"
+                  onClick={() => setForgotPasswordOpen(true)}
+                  sx={{
+                    color: 'primary.main',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    '&:hover': {
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  Forgot Password?
+                </Typography>
+              </Box>
               <Button
                 type="submit"
                 fullWidth
@@ -212,6 +269,101 @@ const Login = () => {
               </Box>
             </form>
           </Paper>
+        </Box>
+
+        {/* Forgot Password Dialog */}
+        <Dialog
+          open={forgotPasswordOpen}
+          onClose={() => {
+            setForgotPasswordOpen(false)
+            setResetEmail('')
+            setResetMessage('')
+          }}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle sx={{ fontWeight: 600 }}>Forgot Password</DialogTitle>
+          <form onSubmit={handleForgotPassword}>
+            <DialogContent>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Enter your email address and we'll send you a link to reset your password.
+              </Typography>
+              {resetMessage && (
+                <Alert
+                  severity={resetMessage.includes('sent') ? 'success' : 'error'}
+                  sx={{ mb: 2, borderRadius: 2 }}
+                >
+                  {resetMessage}
+                </Alert>
+              )}
+              <TextField
+                autoFocus
+                margin="dense"
+                label="Email Address"
+                type="email"
+                fullWidth
+                variant="outlined"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                  },
+                }}
+              />
+            </DialogContent>
+            <DialogActions sx={{ px: 3, pb: 2 }}>
+              <Button
+                onClick={() => {
+                  setForgotPasswordOpen(false)
+                  setResetEmail('')
+                  setResetMessage('')
+                }}
+                disabled={resetLoading}
+                sx={{ textTransform: 'none' }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                disabled={resetLoading}
+                sx={{
+                  textTransform: 'none',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  },
+                }}
+                startIcon={resetLoading ? <CircularProgress size={20} color="inherit" /> : null}
+              >
+                {resetLoading ? 'Sending...' : 'Send Reset Link'}
+              </Button>
+            </DialogActions>
+          </form>
+        </Dialog>
+        
+        {/* Footer */}
+        <Box
+          component="footer"
+          sx={{
+            mt: 5,
+            py: 3,
+            textAlign: 'center',
+          }}
+        >
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: 'rgba(255, 255, 255, 0.75)',
+              fontSize: '0.875rem',
+              fontWeight: 400,
+              letterSpacing: '0.01em',
+            }}
+          >
+            © {new Date().getFullYear()} Tyronne. All rights reserved.
+          </Typography>
         </Box>
       </Container>
     </Box>

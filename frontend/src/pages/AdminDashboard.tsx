@@ -111,7 +111,7 @@ const AdminDashboard = () => {
   }
 
   return (
-    <Box>
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#f5f5f5' }}>
       <AppBar position="static" sx={{ backgroundColor: '#d32f2f' }}>
         <Toolbar sx={{ flexWrap: 'wrap' }}>
           <FavoriteIcon sx={{ mr: 1, fontSize: { xs: '1.2rem', sm: '1.5rem' } }} />
@@ -296,6 +296,33 @@ const AdminDashboard = () => {
           </Box>
         </Paper>
       </Container>
+      
+      {/* Footer */}
+      <Box
+        component="footer"
+        sx={{
+          mt: 'auto',
+          py: 3,
+          px: 2,
+          backgroundColor: 'background.paper',
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          textAlign: 'center',
+        }}
+      >
+        <Typography 
+          variant="body2" 
+          color="text.secondary"
+          sx={{
+            fontSize: '0.875rem',
+            fontWeight: 400,
+            letterSpacing: '0.01em',
+            opacity: 0.8,
+          }}
+        >
+          © {new Date().getFullYear()} Tyronne. All rights reserved.
+        </Typography>
+      </Box>
     </Box>
   )
 }

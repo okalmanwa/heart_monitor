@@ -260,6 +260,28 @@ const Register = () => {
             </form>
           </Paper>
         </Box>
+        
+        {/* Footer */}
+        <Box
+          component="footer"
+          sx={{
+            mt: 5,
+            py: 3,
+            textAlign: 'center',
+          }}
+        >
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: 'rgba(255, 255, 255, 0.75)',
+              fontSize: '0.875rem',
+              fontWeight: 400,
+              letterSpacing: '0.01em',
+            }}
+          >
+            © {new Date().getFullYear()} Tyronne. All rights reserved.
+          </Typography>
+        </Box>
       </Container>
     </Box>
   )

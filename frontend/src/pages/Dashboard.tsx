@@ -126,7 +126,7 @@ const Dashboard = () => {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5', display: 'flex', flexDirection: 'column' }}>
       <AppBar 
         position="static" 
         sx={{ 
@@ -518,7 +518,7 @@ const Dashboard = () => {
                     mb: 3,
                   }}
                 >
-                  Advanced Charts & Correlations
+                  Charts & Analysis
                 </Typography>
                 <Box sx={{ mb: { xs: 2, sm: 3 } }}>
                   <AdvancedBPChart readings={readings} />
@@ -549,6 +549,33 @@ const Dashboard = () => {
           </Grid>
         )}
       </Container>
+      
+      {/* Footer */}
+      <Box
+        component="footer"
+        sx={{
+          mt: 'auto',
+          py: 3,
+          px: 2,
+          backgroundColor: 'background.paper',
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          textAlign: 'center',
+        }}
+      >
+        <Typography 
+          variant="body2" 
+          color="text.secondary"
+          sx={{
+            fontSize: '0.875rem',
+            fontWeight: 400,
+            letterSpacing: '0.01em',
+            opacity: 0.8,
+          }}
+        >
+          © {new Date().getFullYear()} Tyronne. All rights reserved.
+        </Typography>
+      </Box>
     </Box>
   )
 }

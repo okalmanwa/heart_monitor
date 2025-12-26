@@ -10,7 +10,6 @@ import {
   Box,
   CircularProgress,
   Typography,
-  Chip,
   Button,
   Dialog,
   DialogTitle,
@@ -152,12 +151,13 @@ const MedicationsTable: React.FC<MedicationsTableProps> = ({
                       : 'N/A'}
                   </TableCell>
                   <TableCell align="center" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-                    <Chip
-                      label={medication.is_active ? 'Active' : 'Inactive'}
-                      color={medication.is_active ? 'success' : 'default'}
-                      size="small"
-                      sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}
-                    />
+                    <Typography 
+                      variant="body2" 
+                      color={medication.is_active ? 'text.primary' : 'text.secondary'}
+                      sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                    >
+                      {medication.is_active ? 'Active' : 'Inactive'}
+                    </Typography>
                   </TableCell>
                   <TableCell align="right" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                     <IconButton

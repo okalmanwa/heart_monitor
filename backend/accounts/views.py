@@ -5,11 +5,19 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils.crypto import get_random_string
+from django.utils import timezone
+from datetime import timedelta
 from .serializers import UserRegistrationSerializer, UserSerializer
 from .models import User
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
+
+# Simple in-memory token storage (use Redis or database in production)
+password_reset_tokens = {}
 
 
 @csrf_exempt
@@ -215,4 +223,233 @@ class AdminUserViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def request_password_reset(request):
+    """Request password reset - sends email with reset token"""
+    email = request.data.get('email')
+    
+    if not email:
+        return Response(
+            {'error': 'Email is required'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        # Don't reveal if email exists for security
+        return Response(
+            {'message': 'If an account exists with this email, a password reset link has been sent.'},
+            status=status.HTTP_200_OK
+        )
+    
+    # Generate reset token
+    token = get_random_string(32)
+    expires_at = timezone.now() + timedelta(hours=1)
+    
+    # Store token (in production, use database or Redis)
+    password_reset_tokens[token] = {
+        'user_id': user.id,
+        'email': user.email,
+        'expires_at': expires_at,
+    }
+    
+    # Create reset link
+    reset_link = f"{getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')}/reset-password?token={token}"
+    
+    # Send email
+    subject = "Password Reset Request - Cardiac Monitor"
+    message = f"""
+Hello {user.first_name or user.username},
+
+You requested a password reset for your Cardiac Monitor account.
+
+Click the link below to reset your password:
+{reset_link}
+
+This link will expire in 1 hour.
+
+If you didn't request this, please ignore this email.
+
+Stay healthy!
+The Cardiac Monitor Team
+    """
+    
+    try:
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        # Log email configuration
+        logger.info(f"Email Configuration:")
+        logger.info(f"  Backend: {settings.EMAIL_BACKEND}")
+        logger.info(f"  Host: {settings.EMAIL_HOST}")
+        logger.info(f"  Port: {settings.EMAIL_PORT}")
+        logger.info(f"  Use TLS: {settings.EMAIL_USE_TLS}")
+        logger.info(f"  From: {settings.DEFAULT_FROM_EMAIL}")
+        logger.info(f"  Host User: {settings.EMAIL_HOST_USER if settings.EMAIL_HOST_USER else '(not set)'}")
+        logger.info(f"  Host Password: {'(set)' if settings.EMAIL_HOST_PASSWORD else '(not set)'}")
+        
+        logger.info(f"Sending password reset email to {user.email}")
+        logger.info(f"Reset link: {reset_link}")
+        
+        send_mail(
+            subject,
+            message.strip(),
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            fail_silently=False,
+        )
+        
+        logger.info(f"Password reset email sent successfully to {user.email}")
+        
+        # If using console backend, include reset link in response for development
+        response_data = {
+            'message': 'If an account exists with this email, a password reset link has been sent.'
+        }
+        
+        if 'console' in settings.EMAIL_BACKEND.lower():
+            # In development, include the reset link in the response
+            response_data['dev_reset_link'] = reset_link
+            response_data['dev_message'] = 'Email backend is set to console. Check your Django server terminal for the email. The reset link is also included in this response for development.'
+            logger.warning("EMAIL_BACKEND is set to console - email was printed to terminal, not sent!")
+            logger.warning(f"Reset link: {reset_link}")
+        else:
+            logger.info(f"Email sent via SMTP to {user.email}")
+        
+        return Response(response_data, status=status.HTTP_200_OK)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        error_msg = str(e)
+        logger.error(f"Failed to send password reset email: {error_msg}", exc_info=True)
+        
+        # Provide more helpful error messages
+        if 'authentication failed' in error_msg.lower() or 'invalid credentials' in error_msg.lower():
+            error_msg = 'Email authentication failed. Please check your EMAIL_HOST_USER and EMAIL_HOST_PASSWORD in .env file.'
+        elif 'connection' in error_msg.lower() or 'timeout' in error_msg.lower():
+            error_msg = 'Could not connect to email server. Please check your EMAIL_HOST and EMAIL_PORT settings.'
+        
+        return Response(
+            {'error': f'Failed to send email: {error_msg}. Please check server logs and email configuration.'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@csrf_exempt
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+def test_email_config(request):
+    """Test endpoint to verify email configuration"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    email_config = {
+        'EMAIL_BACKEND': settings.EMAIL_BACKEND,
+        'EMAIL_HOST': settings.EMAIL_HOST,
+        'EMAIL_PORT': settings.EMAIL_PORT,
+        'EMAIL_USE_TLS': settings.EMAIL_USE_TLS,
+        'DEFAULT_FROM_EMAIL': settings.DEFAULT_FROM_EMAIL,
+        'EMAIL_HOST_USER': settings.EMAIL_HOST_USER if settings.EMAIL_HOST_USER else '(not set)',
+        'EMAIL_HOST_PASSWORD': '(set)' if settings.EMAIL_HOST_PASSWORD else '(not set)',
+    }
+    
+    if request.method == 'POST':
+        # Try to send a test email
+        test_email = request.data.get('email', settings.EMAIL_HOST_USER)
+        if not test_email:
+            return Response(
+                {'error': 'Please provide an email address to send test email to'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            send_mail(
+                'Test Email - Cardiac Monitor',
+                'This is a test email from Cardiac Monitor. If you receive this, your email configuration is working correctly!',
+                settings.DEFAULT_FROM_EMAIL,
+                [test_email],
+                fail_silently=False,
+            )
+            return Response({
+                'message': f'Test email sent successfully to {test_email}!',
+                'config': email_config
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Test email failed: {str(e)}", exc_info=True)
+            return Response({
+                'error': f'Failed to send test email: {str(e)}',
+                'config': email_config
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    return Response({
+        'message': 'Email configuration check',
+        'config': email_config,
+        'note': 'Send POST request with {"email": "your@email.com"} to test email sending'
+    }, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def reset_password(request):
+    """Reset password using token"""
+    token = request.data.get('token')
+    new_password = request.data.get('password')
+    
+    if not token or not new_password:
+        return Response(
+            {'error': 'Token and password are required'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Validate token
+    if token not in password_reset_tokens:
+        return Response(
+            {'error': 'Invalid or expired reset token'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    token_data = password_reset_tokens[token]
+    
+    # Check if token expired
+    if timezone.now() > token_data['expires_at']:
+        del password_reset_tokens[token]
+        return Response(
+            {'error': 'Reset token has expired. Please request a new one.'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        user = User.objects.get(id=token_data['user_id'])
+        
+        # Validate password
+        from django.contrib.auth.password_validation import validate_password
+        try:
+            validate_password(new_password, user)
+        except Exception as e:
+            return Response(
+                {'error': 'Password does not meet requirements: ' + ', '.join(e.messages)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Set new password
+        user.set_password(new_password)
+        user.save()
+        
+        # Delete used token
+        del password_reset_tokens[token]
+        
+        return Response(
+            {'message': 'Password has been reset successfully. You can now login with your new password.'},
+            status=status.HTTP_200_OK
+        )
+    except User.DoesNotExist:
+        return Response(
+            {'error': 'User not found'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
 
