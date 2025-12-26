@@ -11,8 +11,15 @@ import {
   Switch,
   CircularProgress,
   Snackbar,
+  LinearProgress,
+  Card,
+  CardContent,
+  Chip,
 } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import MedicationIcon from '@mui/icons-material/Medication'
+import LocalPharmacyIcon from '@mui/icons-material/LocalPharmacy'
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
 import apiClient from '../config/axios'
 import { Medication } from '../types'
 
@@ -45,6 +52,14 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  // Calculate form completion
+  const formProgress = [
+    name,
+    dosage,
+    frequency,
+    startDate,
+  ].filter(Boolean).length / 4
 
   // Update form fields when initialData changes (for editing)
   useEffect(() => {
@@ -167,10 +182,42 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
   return (
     <form onSubmit={handleSubmit}>
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert 
+          severity="error" 
+          sx={{ 
+            mb: 2,
+            borderRadius: 2,
+          }}
+        >
           {error}
         </Alert>
       )}
+
+      {/* Progress Indicator */}
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+            Form Progress
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+            {Math.round(formProgress * 100)}%
+          </Typography>
+        </Box>
+        <LinearProgress 
+          variant="determinate" 
+          value={formProgress * 100} 
+          sx={{ 
+            height: 8, 
+            borderRadius: 4,
+            backgroundColor: '#e0e0e0',
+            '& .MuiLinearProgress-bar': {
+              borderRadius: 4,
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            },
+          }}
+        />
+      </Box>
+
       <Snackbar
         open={success}
         autoHideDuration={3000}
@@ -208,7 +255,16 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
             }
           }}
         >
-          Medication {initialData?.id ? 'updated' : 'added'} successfully!
+          <Box>
+            <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5 }}>
+              🎉 Medication {initialData?.id ? 'updated' : 'added'} successfully!
+            </Typography>
+            <Typography variant="body2">
+              {initialData?.id 
+                ? 'Your medication information has been updated.'
+                : 'Great job tracking your medications! Keep it up!'}
+            </Typography>
+          </Box>
         </Alert>
       </Snackbar>
 
@@ -217,10 +273,21 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
           <TextField
             required
             fullWidth
-            label="Medication Name"
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <MedicationIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />
+                <span>Medication Name</span>
+              </Box>
+            }
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g., Lisinopril, Aspirin"
+            placeholder="e.g., Lisinopril, Aspirin, Metformin"
+            helperText="💊 Enter the name of your medication"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+              },
+            }}
           />
         </Grid>
 
@@ -228,10 +295,21 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
           <TextField
             required
             fullWidth
-            label="Dosage"
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <LocalPharmacyIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />
+                <span>Dosage</span>
+              </Box>
+            }
             value={dosage}
             onChange={(e) => setDosage(e.target.value)}
-            placeholder="e.g., 10mg, 1 tablet"
+            placeholder="e.g., 10mg, 1 tablet, 2 capsules"
+            helperText="💉 How much do you take?"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+              },
+            }}
           />
         </Grid>
 
@@ -240,9 +318,15 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
             required
             fullWidth
             select
-            label="Frequency"
+            label="⏰ Frequency"
             value={frequency}
             onChange={(e) => setFrequency(e.target.value as Medication['frequency'])}
+            helperText="How often do you take it?"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+              },
+            }}
           >
             {frequencyOptions.map((option) => (
               <MenuItem key={option.value} value={option.value}>
@@ -256,12 +340,23 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
           <TextField
             required
             fullWidth
-            label="Start Date"
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <CalendarTodayIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />
+                <span>Start Date</span>
+              </Box>
+            }
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
             InputLabelProps={{
               shrink: true,
+            }}
+            helperText="📅 When did you start taking this?"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+              },
             }}
           />
         </Grid>
@@ -269,7 +364,7 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
         <Grid item xs={12} sm={6}>
           <TextField
             fullWidth
-            label="End Date (if stopped)"
+            label="📅 End Date (if stopped)"
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
@@ -277,50 +372,116 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
               shrink: true,
             }}
             helperText="Leave blank if still taking"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+              },
+            }}
           />
         </Grid>
 
         <Grid item xs={12}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={isActive}
-                onChange={(e) => setIsActive(e.target.checked)}
-                color="primary"
-              />
-            }
-            label="Active Medication"
-          />
+          <Card 
+            sx={{ 
+              p: 2,
+              background: isActive 
+                ? 'linear-gradient(135deg, #4caf5015 0%, #4caf5005 100%)'
+                : 'background.paper',
+              border: `2px solid ${isActive ? '#4caf5040' : '#e0e0e0'}`,
+              borderRadius: 2,
+            }}
+          >
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={isActive}
+                  onChange={(e) => setIsActive(e.target.checked)}
+                  color="primary"
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: '#4caf50',
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: '#4caf50',
+                    },
+                  }}
+                />
+              }
+              label={
+                <Box>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                    {isActive ? '✅ Active Medication' : '⏸️ Inactive Medication'}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {isActive 
+                      ? 'You are currently taking this medication'
+                      : 'You are not currently taking this medication'}
+                  </Typography>
+                </Box>
+              }
+            />
+          </Card>
         </Grid>
 
         <Grid item xs={12}>
           <TextField
             fullWidth
-            label="Notes (optional)"
+            label="📝 Notes (optional)"
             multiline
             rows={3}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="e.g., Take with food, avoid alcohol"
+            placeholder="💡 Add helpful reminders: e.g., 'Take with food', 'Avoid alcohol', 'Take in the morning'"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+              },
+            }}
           />
         </Grid>
 
         <Grid item xs={12}>
-          <Box display="flex" gap={2} justifyContent="flex-end">
+          <Box display="flex" gap={2} justifyContent="flex-end" sx={{ mt: 2 }}>
             {onCancel && (
-              <Button variant="outlined" onClick={onCancel}>
+              <Button 
+                variant="outlined" 
+                onClick={onCancel}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                }}
+              >
                 Cancel
               </Button>
             )}
             <Button
               type="submit"
               variant="contained"
-              disabled={loading}
-              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
+              disabled={loading || !name || !dosage || !frequency || !startDate}
+              sx={{
+                borderRadius: 2,
+                px: 3,
+                py: 1.5,
+                fontSize: '1rem',
+                fontWeight: 600,
+                textTransform: 'none',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)',
+                '&:hover': {
+                  boxShadow: '0 6px 16px rgba(102, 126, 234, 0.5)',
+                  transform: 'translateY(-1px)',
+                },
+                '&:disabled': {
+                  background: 'rgba(102, 126, 234, 0.5)',
+                },
+                transition: 'all 0.2s ease',
+              }}
+              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <CheckCircleIcon />}
             >
               {loading 
-                ? (initialData?.id ? 'Updating...' : 'Adding...') 
-                : (initialData?.id ? 'Update' : 'Add') + ' Medication'}
+                ? (initialData?.id ? 'Updating...' : 'Saving...') 
+                : `💾 ${initialData?.id ? 'Update' : 'Save'} Medication`}
             </Button>
           </Box>
         </Grid>
