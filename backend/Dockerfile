@@ -23,8 +23,8 @@ COPY . /app/
 # Collect static files
 RUN python manage.py collectstatic --noinput || true
 
-# Expose port
-EXPOSE $PORT
+# Expose port (Railway will set PORT at runtime)
+EXPOSE 8000
 
 # Run migrations and start server
 # Use JSON format for CMD to handle signals properly
