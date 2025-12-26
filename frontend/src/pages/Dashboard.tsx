@@ -11,8 +11,16 @@ import {
   Paper,
   Tabs,
   Tab,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import FavoriteIcon from '@mui/icons-material/Favorite'
+import MonitorHeartIcon from '@mui/icons-material/MonitorHeart'
+import HealthAndSafetyIcon from '@mui/icons-material/HealthAndSafety'
+import MedicationIcon from '@mui/icons-material/Medication'
+import BarChartIcon from '@mui/icons-material/BarChart'
+import LightbulbIcon from '@mui/icons-material/Lightbulb'
+import NotificationsIcon from '@mui/icons-material/Notifications'
 import { useAuth } from '../contexts/AuthContext'
 import ReadingForm from '../components/ReadingForm'
 import ReadingsTable from '../components/ReadingsTable'
@@ -23,6 +31,7 @@ import MedicationForm from '../components/MedicationForm'
 import MedicationsTable from '../components/MedicationsTable'
 import AdvancedBPChart from '../components/AdvancedBPChart'
 import CorrelationChart from '../components/CorrelationChart'
+import PulseRateChart from '../components/PulseRateChart'
 import NotificationPreferences from '../components/NotificationPreferences'
 import Insights from '../components/Insights'
 import { BloodPressureReading, HealthFactor, Medication } from '../types'
@@ -31,6 +40,8 @@ import apiClient from '../config/axios'
 const Dashboard = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const [readings, setReadings] = useState<BloodPressureReading[]>([])
   const [healthFactors, setHealthFactors] = useState<HealthFactor[]>([])
   const [medications, setMedications] = useState<Medication[]>([])
@@ -116,49 +127,143 @@ const Dashboard = () => {
   return (
     <Box>
       <AppBar position="static" sx={{ backgroundColor: '#d32f2f' }}>
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-            <FavoriteIcon /> Moyo - Cardiac Health Monitoring
+        <Toolbar sx={{ flexWrap: 'wrap' }}>
+          <Typography 
+            variant="h6" 
+            component="div" 
+            sx={{ 
+              flexGrow: 1, 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 1,
+              fontSize: { xs: '1rem', sm: '1.25rem' }
+            }}
+          >
+            <FavoriteIcon sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }} /> 
+            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+              Cardiac Monitor
+            </Box>
+            <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+              CM
+            </Box>
           </Typography>
-          <Typography variant="body2" sx={{ mr: 2 }}>
-            {user?.email}
-          </Typography>
-          {(user as any)?.is_staff && (
-            <Button
-              color="inherit"
-              href="/admin"
-              sx={{ mr: 1 }}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                mr: { xs: 0, sm: 2 },
+                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                display: { xs: 'none', sm: 'block' }
+              }}
             >
-              Admin Panel
+              {user?.email}
+            </Typography>
+            {(user as any)?.is_staff && (
+              <Button
+                color="inherit"
+                href="/admin"
+                sx={{ 
+                  mr: { xs: 0.5, sm: 1 },
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                  px: { xs: 1, sm: 2 }
+                }}
+              >
+                Admin
+              </Button>
+            )}
+            <Button 
+              color="inherit" 
+              onClick={handleLogout}
+              sx={{ 
+                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                px: { xs: 1, sm: 2 }
+              }}
+            >
+              Logout
             </Button>
-          )}
-          <Button color="inherit" onClick={handleLogout}>
-            Logout
-          </Button>
+          </Box>
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Typography variant="h4" gutterBottom>
+      <Container maxWidth="lg" sx={{ mt: { xs: 2, sm: 4 }, mb: { xs: 2, sm: 4 }, px: { xs: 1, sm: 2 } }}>
+        <Typography 
+          variant="h4" 
+          gutterBottom
+          sx={{ fontSize: { xs: '1.5rem', sm: '2.125rem' } }}
+        >
           Welcome, {user?.first_name || user?.username || 'User'}!
         </Typography>
 
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-          <Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)}>
-            <Tab label="Blood Pressure" />
-            <Tab label="Health Factors" />
-            <Tab label="Medications" />
-            <Tab label="Charts" />
-            <Tab label="Insights" />
-            <Tab label="Notifications" />
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3, overflowX: 'auto' }}>
+          <Tabs 
+            value={activeTab} 
+            onChange={(_, newValue) => setActiveTab(newValue)}
+            variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
+            sx={{
+              '& .MuiTab-root': {
+                fontSize: { xs: '0.7rem', sm: '0.875rem' },
+                minWidth: { xs: 90, sm: 120 },
+                px: { xs: 1.5, sm: 2 },
+                gap: { xs: 0.5, sm: 1 },
+                flexDirection: { xs: 'row', sm: 'row' },
+                '& .MuiTab-iconWrapper': {
+                  marginRight: { xs: 0.5, sm: 1 }
+                }
+              }
+            }}
+          >
+            <Tab 
+              icon={<MonitorHeartIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />}
+              iconPosition="start"
+              label={isMobile ? "BP" : "Blood Pressure"}
+              aria-label="Blood Pressure"
+              sx={{ textTransform: 'none' }}
+            />
+            <Tab 
+              icon={<HealthAndSafetyIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />}
+              iconPosition="start"
+              label={isMobile ? "Health" : "Health Factors"}
+              aria-label="Health Factors"
+              sx={{ textTransform: 'none' }}
+            />
+            <Tab 
+              icon={<MedicationIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />}
+              iconPosition="start"
+              label={isMobile ? "Meds" : "Medications"}
+              aria-label="Medications"
+              sx={{ textTransform: 'none' }}
+            />
+            <Tab 
+              icon={<BarChartIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />}
+              iconPosition="start"
+              label="Charts"
+              aria-label="Charts"
+              sx={{ textTransform: 'none' }}
+            />
+            <Tab 
+              icon={<LightbulbIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />}
+              iconPosition="start"
+              label="Insights"
+              aria-label="AI Insights"
+              sx={{ textTransform: 'none' }}
+            />
+            <Tab 
+              icon={<NotificationsIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />}
+              iconPosition="start"
+              label={isMobile ? "Alerts" : "Notifications"}
+              aria-label="Notifications"
+              sx={{ textTransform: 'none' }}
+            />
           </Tabs>
         </Box>
 
         {activeTab === 0 && (
-          <Grid container spacing={3}>
+          <Grid container spacing={{ xs: 2, sm: 3 }}>
             <Grid item xs={12} md={4}>
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom>
+              <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+                <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
                   Add Reading
                 </Typography>
                 <ReadingForm onReadingAdded={handleReadingAdded} />
@@ -166,8 +271,8 @@ const Dashboard = () => {
             </Grid>
 
             <Grid item xs={12} md={8}>
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom>
+              <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+                <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
                   Blood Pressure Trends
                 </Typography>
                 <AdvancedBPChart readings={readings} />
@@ -175,8 +280,8 @@ const Dashboard = () => {
             </Grid>
 
             <Grid item xs={12}>
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom>
+              <Paper sx={{ p: { xs: 2, sm: 3 }, overflow: 'auto' }}>
+                <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
                   All Readings
                 </Typography>
                 <ReadingsTable
@@ -191,7 +296,7 @@ const Dashboard = () => {
                       const url = window.URL.createObjectURL(new Blob([response.data]))
                       const link = document.createElement('a')
                       link.href = url
-                      link.setAttribute('download', 'moyo_blood_pressure_report.pdf')
+                      link.setAttribute('download', 'cardiac_monitor_blood_pressure_report.pdf')
                       document.body.appendChild(link)
                       link.click()
                       link.remove()
@@ -207,10 +312,10 @@ const Dashboard = () => {
         )}
 
         {activeTab === 1 && (
-          <Grid container spacing={3}>
+          <Grid container spacing={{ xs: 2, sm: 3 }}>
             <Grid item xs={12} md={4}>
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom>
+              <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+                <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
                   Track Health Factors
                 </Typography>
                 <HealthFactorsForm onFactorAdded={handleFactorAdded} />
@@ -218,8 +323,8 @@ const Dashboard = () => {
             </Grid>
 
             <Grid item xs={12} md={8}>
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom>
+              <Paper sx={{ p: { xs: 2, sm: 3 }, overflow: 'auto' }}>
+                <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
                   Health Factors History
                 </Typography>
                 <HealthFactorsTable
@@ -233,10 +338,10 @@ const Dashboard = () => {
         )}
 
         {activeTab === 2 && (
-          <Grid container spacing={3}>
+          <Grid container spacing={{ xs: 2, sm: 3 }}>
             <Grid item xs={12} md={4}>
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom>
+              <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+                <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
                   {editingMedication ? 'Edit Medication' : 'Add Medication'}
                 </Typography>
                 <MedicationForm
@@ -249,8 +354,8 @@ const Dashboard = () => {
             </Grid>
 
             <Grid item xs={12} md={8}>
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom>
+              <Paper sx={{ p: { xs: 2, sm: 3 }, overflow: 'auto' }}>
+                <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
                   My Medications
                 </Typography>
                 <MedicationsTable
@@ -266,14 +371,17 @@ const Dashboard = () => {
         )}
 
         {activeTab === 3 && (
-          <Grid container spacing={3}>
+          <Grid container spacing={{ xs: 2, sm: 3 }}>
             <Grid item xs={12}>
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom>
+              <Paper sx={{ p: { xs: 2, sm: 3 }, overflow: 'auto' }}>
+                <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
                   Advanced Charts & Correlations
                 </Typography>
-                <Box sx={{ mb: 3 }}>
+                <Box sx={{ mb: { xs: 2, sm: 3 } }}>
                   <AdvancedBPChart readings={readings} />
+                </Box>
+                <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+                  <PulseRateChart readings={readings} />
                 </Box>
                 <CorrelationChart readings={readings} healthFactors={healthFactors} />
               </Paper>
@@ -282,9 +390,9 @@ const Dashboard = () => {
         )}
 
         {activeTab === 4 && (
-          <Grid container spacing={3}>
+          <Grid container spacing={{ xs: 2, sm: 3 }}>
             <Grid item xs={12}>
-              <Paper sx={{ p: 3 }}>
+              <Paper sx={{ p: { xs: 2, sm: 3 } }}>
                 <Insights />
               </Paper>
             </Grid>
@@ -292,7 +400,7 @@ const Dashboard = () => {
         )}
 
         {activeTab === 5 && (
-          <Grid container spacing={3}>
+          <Grid container spacing={{ xs: 2, sm: 3 }}>
             <Grid item xs={12}>
               <NotificationPreferences />
             </Grid>

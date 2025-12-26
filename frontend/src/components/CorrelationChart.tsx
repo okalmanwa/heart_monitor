@@ -210,23 +210,43 @@ const CorrelationChart: React.FC<CorrelationChartProps> = ({
   }
 
   return (
-    <Paper sx={{ p: 3 }}>
-      <Typography variant="h6" gutterBottom>
+    <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+      <Typography 
+        variant="h6" 
+        gutterBottom
+        sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}
+      >
         BP vs Health Factors Correlation
       </Typography>
-      <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+      <Typography 
+        variant="caption" 
+        color="text.secondary" 
+        sx={{ mb: 2, display: 'block', fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+      >
         Showing {matchedData.length} days with both BP readings and health factors
       </Typography>
 
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-        <Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)}>
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2, overflowX: 'auto' }}>
+        <Tabs 
+          value={activeTab} 
+          onChange={(_, newValue) => setActiveTab(newValue)}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{
+            '& .MuiTab-root': {
+              fontSize: { xs: '0.7rem', sm: '0.875rem' },
+              minWidth: { xs: 80, sm: 120 },
+              px: { xs: 1, sm: 2 }
+            }
+          }}
+        >
           <Tab label="Sleep Quality" />
           <Tab label="Stress Level" />
           <Tab label="Exercise" />
         </Tabs>
       </Box>
 
-      <Box sx={{ height: 400, position: 'relative' }}>
+      <Box sx={{ height: { xs: 300, sm: 400 }, position: 'relative' }}>
         {activeTab === 0 && sleepData && (
           <Scatter data={sleepData} options={scatterOptions} />
         )}

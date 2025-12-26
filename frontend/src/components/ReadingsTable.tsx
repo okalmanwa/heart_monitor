@@ -10,6 +10,8 @@ import {
   Box,
   Button,
   CircularProgress,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import PrintIcon from '@mui/icons-material/Print'
@@ -31,6 +33,9 @@ const ReadingsTable: React.FC<ReadingsTableProps> = ({
   onReadingDeleted,
   onExportPDF,
 }) => {
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  
   const getCategoryColor = (category?: string) => {
     switch (category) {
       case 'normal':
@@ -87,11 +92,18 @@ const ReadingsTable: React.FC<ReadingsTableProps> = ({
 
   return (
     <Box>
-      <Box mb={2} display="flex" gap={2}>
+      <Box 
+        mb={2} 
+        display="flex" 
+        gap={2}
+        flexDirection={{ xs: 'column', sm: 'row' }}
+      >
         <Button
           variant="outlined"
           startIcon={<DownloadIcon />}
           onClick={onExportPDF}
+          fullWidth={isMobile}
+          size={isMobile ? 'small' : 'medium'}
         >
           Download PDF
         </Button>
@@ -99,21 +111,23 @@ const ReadingsTable: React.FC<ReadingsTableProps> = ({
           variant="outlined"
           startIcon={<PrintIcon />}
           onClick={handlePrint}
+          fullWidth={isMobile}
+          size={isMobile ? 'small' : 'medium'}
         >
           Print
         </Button>
       </Box>
-      <TableContainer>
-        <Table>
+      <TableContainer sx={{ overflowX: 'auto' }}>
+        <Table sx={{ minWidth: 650 }}>
           <TableHead>
             <TableRow>
-              <TableCell>Date & Time</TableCell>
-              <TableCell align="right">Systolic</TableCell>
-              <TableCell align="right">Diastolic</TableCell>
-              <TableCell align="right">Heart Rate</TableCell>
-              <TableCell>Category</TableCell>
-              <TableCell>Notes</TableCell>
-              <TableCell align="right">Actions</TableCell>
+              <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Date & Time</TableCell>
+              <TableCell align="right" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Systolic</TableCell>
+              <TableCell align="right" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Diastolic</TableCell>
+              <TableCell align="right" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, display: { xs: 'none', md: 'table-cell' } }}>Heart Rate</TableCell>
+              <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Category</TableCell>
+              <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, display: { xs: 'none', lg: 'table-cell' } }}>Notes</TableCell>
+              <TableCell align="right" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -126,31 +140,34 @@ const ReadingsTable: React.FC<ReadingsTableProps> = ({
             ) : (
               readings.map((reading) => (
                 <TableRow key={reading.id}>
-                  <TableCell>
+                  <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                     {reading.recorded_at
                       ? format(new Date(reading.recorded_at), 'MMM dd, yyyy HH:mm')
                       : 'N/A'}
                   </TableCell>
-                  <TableCell align="right">{reading.systolic}</TableCell>
-                  <TableCell align="right">{reading.diastolic}</TableCell>
-                  <TableCell align="right">
+                  <TableCell align="right" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>{reading.systolic}</TableCell>
+                  <TableCell align="right" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>{reading.diastolic}</TableCell>
+                  <TableCell align="right" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, display: { xs: 'none', md: 'table-cell' } }}>
                     {reading.heart_rate || 'N/A'}
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                     <Chip
                       label={getCategoryLabel(reading.category)}
                       color={getCategoryColor(reading.category) as any}
                       size="small"
+                      sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}
                     />
                   </TableCell>
-                  <TableCell>{reading.notes || '-'}</TableCell>
-                  <TableCell align="right">
+                  <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, display: { xs: 'none', lg: 'table-cell' } }}>
+                    {reading.notes || '-'}
+                  </TableCell>
+                  <TableCell align="right" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                     <IconButton
                       size="small"
                       onClick={() => reading.id && handleDelete(reading.id)}
                       color="error"
                     >
-                      <DeleteIcon />
+                      <DeleteIcon fontSize="small" />
                     </IconButton>
                   </TableCell>
                 </TableRow>

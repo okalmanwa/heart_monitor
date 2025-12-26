@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   TextField,
   Button,
@@ -7,6 +7,8 @@ import {
   Box,
   MenuItem,
   Grid,
+  FormControlLabel,
+  Switch,
 } from '@mui/material'
 import apiClient from '../config/axios'
 import { Medication } from '../types'
@@ -41,6 +43,32 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
 
+  // Update form fields when initialData changes (for editing)
+  useEffect(() => {
+    if (initialData) {
+      setName(initialData.name || '')
+      setDosage(initialData.dosage || '')
+      setFrequency(initialData.frequency || 'once_daily')
+      setStartDate(initialData.start_date || new Date().toISOString().split('T')[0])
+      setEndDate(initialData.end_date || '')
+      setIsActive(initialData.is_active ?? true)
+      setNotes(initialData.notes || '')
+      setError('')
+      setSuccess(false)
+    } else {
+      // Reset form when initialData is cleared (new medication)
+      setName('')
+      setDosage('')
+      setFrequency('once_daily')
+      setStartDate(new Date().toISOString().split('T')[0])
+      setEndDate('')
+      setIsActive(true)
+      setNotes('')
+      setError('')
+      setSuccess(false)
+    }
+  }, [initialData])
+
   const frequencyOptions = [
     { value: 'once_daily', label: 'Once Daily' },
     { value: 'twice_daily', label: 'Twice Daily' },
@@ -74,6 +102,10 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
         response = await apiClient.put(`/api/medications/medications/${initialData.id}/`, payload)
         if (onMedicationUpdated) {
           onMedicationUpdated(response.data)
+        }
+        // Clear editing state after successful update
+        if (onCancel) {
+          setTimeout(() => onCancel(), 500) // Small delay to show success message
         }
       } else {
         // Create new medication
@@ -183,6 +215,19 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
               shrink: true,
             }}
             helperText="Leave blank if still taking"
+          />
+        </Grid>
+
+        <Grid item xs={12}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+                color="primary"
+              />
+            }
+            label="Active Medication"
           />
         </Grid>
 

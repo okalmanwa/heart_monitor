@@ -26,13 +26,13 @@ ChartJS.register(
   Filler
 )
 
-interface AdvancedBPChartProps {
+interface PulseRateChartProps {
   readings: BloodPressureReading[]
 }
 
 type TimePeriod = '7d' | '30d' | '90d' | '1y' | 'all' | 'custom'
 
-const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
+const PulseRateChart: React.FC<PulseRateChartProps> = ({ readings }) => {
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('30d')
   const [customStartDate, setCustomStartDate] = useState<string>('')
   const [customEndDate, setCustomEndDate] = useState<string>('')
@@ -67,6 +67,9 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
     }
 
     let filtered = [...readings]
+
+    // Filter out readings without heart_rate
+    filtered = filtered.filter((r) => r.heart_rate !== null && r.heart_rate !== undefined)
 
     if (startDate) {
       filtered = filtered.filter(
@@ -114,45 +117,33 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
       format(new Date(reading.recorded_at), getLabelFormat())
     )
 
-    // Get colors based on BP category
-    const getPointColor = (category?: string) => {
-      switch (category) {
-        case 'normal':
-          return '#4caf50' // Green
-        case 'elevated':
-          return '#ff9800' // Orange
-        case 'high_stage1':
-          return '#f44336' // Red
-        case 'high_stage2':
-          return '#d32f2f' // Dark Red
-        default:
-          return '#757575' // Gray
+    // Get colors based on heart rate category
+    const getPointColor = (heartRate?: number) => {
+      if (!heartRate) return '#757575' // Gray
+      
+      // Normal resting heart rate: 60-100 BPM for adults
+      if (heartRate < 60) {
+        return '#2196f3' // Blue - Below normal (bradycardia)
+      } else if (heartRate <= 100) {
+        return '#4caf50' // Green - Normal
+      } else if (heartRate <= 120) {
+        return '#ff9800' // Orange - Elevated
+      } else {
+        return '#f44336' // Red - High (tachycardia)
       }
     }
 
-    const pointColors = filteredReadings.map((r) => getPointColor(r.category))
+    const pointColors = filteredReadings.map((r) => getPointColor(r.heart_rate))
     const pointBorderColors = pointColors
 
     return {
       labels,
       datasets: [
         {
-          label: 'Systolic',
-          data: filteredReadings.map((r) => r.systolic),
-          borderColor: 'rgb(75, 192, 192)',
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
-          tension: 0.1,
-          pointRadius: 6,
-          pointBackgroundColor: pointColors,
-          pointBorderColor: pointBorderColors,
-          pointBorderWidth: 2,
-          fill: true,
-        },
-        {
-          label: 'Diastolic',
-          data: filteredReadings.map((r) => r.diastolic),
-          borderColor: 'rgb(255, 99, 132)',
-          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          label: 'Pulse Rate (BPM)',
+          data: filteredReadings.map((r) => r.heart_rate),
+          borderColor: 'rgb(233, 30, 99)',
+          backgroundColor: 'rgba(233, 30, 99, 0.2)',
           tension: 0.1,
           pointRadius: 6,
           pointBackgroundColor: pointColors,
@@ -173,14 +164,23 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
       },
       title: {
         display: true,
-        text: `Blood Pressure Trends (${filteredReadings.length} readings)`,
+        text: `Pulse Rate Trends (${filteredReadings.length} readings)`,
       },
       tooltip: {
         callbacks: {
-          afterLabel: (context: any) => {
-            const index = context.dataIndex
-            const reading = filteredReadings[index]
-            return `Category: ${reading.category?.replace('_', ' ').toUpperCase() || 'N/A'}`
+          label: (context: any) => {
+            const heartRate = context.parsed.y
+            let category = ''
+            if (heartRate < 60) {
+              category = 'Below Normal (Bradycardia)'
+            } else if (heartRate <= 100) {
+              category = 'Normal'
+            } else if (heartRate <= 120) {
+              category = 'Elevated'
+            } else {
+              category = 'High (Tachycardia)'
+            }
+            return `${context.dataset.label}: ${heartRate} BPM (${category})`
           },
         },
       },
@@ -189,10 +189,19 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
       y: {
         beginAtZero: false,
         min: 40,
-        max: 200,
+        max: 150,
         title: {
           display: true,
-          text: 'Blood Pressure (mmHg)',
+          text: 'Pulse Rate (BPM)',
+        },
+        grid: {
+          color: (context: any) => {
+            const value = context.tick.value
+            if (value === 60 || value === 100) {
+              return 'rgba(0, 0, 0, 0.3)' // Darker grid lines for normal range boundaries
+            }
+            return 'rgba(0, 0, 0, 0.1)'
+          },
         },
       },
     },
@@ -203,7 +212,7 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
       <Paper sx={{ p: 3 }}>
         <Box p={3} textAlign="center">
           <Typography variant="body1" color="text.secondary">
-            No readings available for the selected time period. Add a reading to see the chart.
+            No pulse rate readings available for the selected time period. Add readings with heart rate data to see the chart.
           </Typography>
         </Box>
       </Paper>
@@ -299,12 +308,15 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
 
       <Box mt={2}>
         <Typography variant="caption" color="text.secondary">
-          <strong>Color Legend:</strong> Green = Normal, Orange = Elevated, Red = High Stage 1/2
+          <strong>Color Legend:</strong> Blue = Below Normal (&lt;60 BPM), Green = Normal (60-100 BPM), Orange = Elevated (100-120 BPM), Red = High (&gt;120 BPM)
+        </Typography>
+        <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+          <strong>Reference:</strong> Normal resting heart rate for adults is typically 60-100 BPM.
         </Typography>
       </Box>
     </Paper>
   )
 }
 
-export default AdvancedBPChart
+export default PulseRateChart
 

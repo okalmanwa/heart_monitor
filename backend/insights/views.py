@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from .models import UserInsight
 from .serializers import UserInsightSerializer
 from .ai_service import generate_insights_with_ai, generate_insight_summary
+from .signals import generate_insights_for_user_async
 from notifications.tasks import send_insight_notification_email
 
 User = get_user_model()
@@ -43,6 +44,7 @@ class UserInsightViewSet(viewsets.ModelViewSet):
     def generate_insights(self, request):
         """
         Generate AI-powered insights for the current user or specified user (admin only)
+        Returns immediately and processes asynchronously
         """
         # Determine target user
         user_id = request.data.get('user_id')
@@ -59,43 +61,59 @@ class UserInsightViewSet(viewsets.ModelViewSet):
             # Regular users can only generate insights for themselves
             target_user = request.user
         
+        # Check if user has readings
+        from readings.models import BloodPressureReading
+        reading_count = BloodPressureReading.objects.filter(user=target_user).count()
+        if reading_count < 1:
+            return Response({
+                'message': 'No insights generated. User needs at least one blood pressure reading.',
+                'insights_created': 0
+            }, status=status.HTTP_200_OK)
+        
         try:
-            # Generate insights
-            created_insights = generate_insights_with_ai(target_user)
-            
-            if not created_insights:
+            # Try to run asynchronously first (if Celery/Redis available)
+            try:
+                generate_insights_for_user_async.delay(target_user.id)
                 return Response({
-                    'message': 'No insights generated. User needs at least one blood pressure reading.',
-                    'insights_created': 0
-                }, status=status.HTTP_200_OK)
-            
-            # Send notification email for each new insight (async if Redis available, sync otherwise)
-            for insight in created_insights:
-                try:
-                    send_insight_notification_email.delay(
-                        target_user.id,
-                        insight.insight_text
-                    )
-                except Exception as e:
-                    # If Redis/Celery is not available, run synchronously
-                    # This allows development without Redis
+                    'message': 'Insights generation started. Please refresh in a few moments.',
+                    'insights_created': 0,
+                    'status': 'processing'
+                }, status=status.HTTP_202_ACCEPTED)
+            except Exception:
+                # Fall back to synchronous generation if async fails
+                # This is slower but works without Redis
+                created_insights = generate_insights_with_ai(target_user)
+                
+                if not created_insights:
+                    return Response({
+                        'message': 'No insights generated. User needs at least one blood pressure reading.',
+                        'insights_created': 0
+                    }, status=status.HTTP_200_OK)
+                
+                # Send notification email for each new insight
+                for insight in created_insights:
                     try:
-                        send_insight_notification_email(
+                        send_insight_notification_email.delay(
                             target_user.id,
                             insight.insight_text
                         )
                     except Exception:
-                        # Silently fail if email sending fails (non-critical)
-                        pass
-            
-            # Serialize the created insights
-            serializer = self.get_serializer(created_insights, many=True)
-            
-            return Response({
-                'message': f'Successfully generated {len(created_insights)} insights',
-                'insights_created': len(created_insights),
-                'insights': serializer.data
-            }, status=status.HTTP_201_CREATED)
+                        try:
+                            send_insight_notification_email(
+                                target_user.id,
+                                insight.insight_text
+                            )
+                        except Exception:
+                            pass
+                
+                # Serialize the created insights
+                serializer = self.get_serializer(created_insights, many=True)
+                
+                return Response({
+                    'message': f'Successfully generated {len(created_insights)} insights',
+                    'insights_created': len(created_insights),
+                    'insights': serializer.data
+                }, status=status.HTTP_201_CREATED)
             
         except ValueError as e:
             return Response(
@@ -112,14 +130,26 @@ class UserInsightViewSet(viewsets.ModelViewSet):
     def get_summary(self, request):
         """
         Get an AI-generated summary of all insights for the current user
+        Only generates summary if insights exist
         """
         try:
+            # Check if user has any insights first
+            insights_count = UserInsight.objects.filter(user=request.user).count()
+            if insights_count == 0:
+                return Response({
+                    'summary': None,
+                    'has_insights': False,
+                    'message': 'No insights available to summarize.'
+                }, status=status.HTTP_200_OK)
+            
+            # Generate summary (this may take a moment but is faster than full generation)
             summary = generate_insight_summary(request.user)
             
             if not summary:
                 return Response({
-                    'summary': 'No insights available to summarize.',
-                    'has_insights': False
+                    'summary': None,
+                    'has_insights': True,
+                    'message': 'Summary generation is temporarily unavailable.'
                 }, status=status.HTTP_200_OK)
             
             return Response({
@@ -128,8 +158,10 @@ class UserInsightViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_200_OK)
             
         except Exception as e:
-            return Response(
-                {'error': f'Failed to generate summary: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            # Don't fail completely - just return that summary isn't available
+            return Response({
+                'summary': None,
+                'has_insights': UserInsight.objects.filter(user=request.user).exists(),
+                'message': 'Summary generation is temporarily unavailable.'
+            }, status=status.HTTP_200_OK)
 

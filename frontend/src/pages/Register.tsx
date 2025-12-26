@@ -45,23 +45,56 @@ const Register = () => {
   }
 
   return (
-    <Container component="main" maxWidth="xs">
+    <Container 
+      component="main" 
+      maxWidth="xs"
+      sx={{ px: { xs: 2, sm: 3 } }}
+    >
       <Box
         sx={{
-          marginTop: 8,
+          marginTop: { xs: 4, sm: 8 },
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
         }}
       >
-        <Typography component="h1" variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <FavoriteIcon sx={{ color: '#d32f2f' }} /> Moyo
+        <Typography 
+          component="h1" 
+          variant="h4" 
+          gutterBottom 
+          sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1,
+            fontSize: { xs: '1.5rem', sm: '2.125rem' }
+          }}
+        >
+          <FavoriteIcon sx={{ color: '#d32f2f', fontSize: { xs: '1.5rem', sm: '2rem' } }} /> 
+          Cardiac Monitor
         </Typography>
-        <Typography component="h2" variant="h6" color="text.secondary" gutterBottom>
+        <Typography 
+          component="h2" 
+          variant="h6" 
+          color="text.secondary" 
+          gutterBottom
+          sx={{ fontSize: { xs: '0.875rem', sm: '1.25rem' } }}
+        >
           Cardiac Health Monitoring
         </Typography>
-        <Paper elevation={3} sx={{ padding: 4, marginTop: 2, width: '100%' }}>
-          <Typography component="h2" variant="h5" gutterBottom>
+        <Paper 
+          elevation={3} 
+          sx={{ 
+            padding: { xs: 2, sm: 4 }, 
+            marginTop: 2, 
+            width: '100%' 
+          }}
+        >
+          <Typography 
+            component="h2" 
+            variant="h5" 
+            gutterBottom
+            sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}
+          >
             Sign Up
           </Typography>
           {error && (

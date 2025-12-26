@@ -105,16 +105,16 @@ const MedicationsTable: React.FC<MedicationsTableProps> = ({
 
   return (
     <Box>
-      <TableContainer>
-        <Table>
+      <TableContainer sx={{ overflowX: 'auto' }}>
+        <Table sx={{ minWidth: 650 }}>
           <TableHead>
             <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Dosage</TableCell>
-              <TableCell align="center">Frequency</TableCell>
-              <TableCell>Start Date</TableCell>
-              <TableCell align="center">Status</TableCell>
-              <TableCell align="right">Actions</TableCell>
+              <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Name</TableCell>
+              <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Dosage</TableCell>
+              <TableCell align="center" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Frequency</TableCell>
+              <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, display: { xs: 'none', md: 'table-cell' } }}>Start Date</TableCell>
+              <TableCell align="center" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Status</TableCell>
+              <TableCell align="right" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -127,40 +127,41 @@ const MedicationsTable: React.FC<MedicationsTableProps> = ({
             ) : (
               medications.map((medication) => (
                 <TableRow key={medication.id}>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight="medium">
+                  <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                    <Typography variant="body2" fontWeight="medium" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                       {medication.name}
                     </Typography>
                     {medication.notes && (
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
                         {medication.notes}
                       </Typography>
                     )}
                   </TableCell>
-                  <TableCell>{medication.dosage}</TableCell>
-                  <TableCell align="center">
+                  <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>{medication.dosage}</TableCell>
+                  <TableCell align="center" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                     {frequencyLabels[medication.frequency]}
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, display: { xs: 'none', md: 'table-cell' } }}>
                     {medication.start_date
                       ? format(new Date(medication.start_date), 'MMM dd, yyyy')
                       : 'N/A'}
                   </TableCell>
-                  <TableCell align="center">
+                  <TableCell align="center" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                     <Chip
                       label={medication.is_active ? 'Active' : 'Inactive'}
                       color={medication.is_active ? 'success' : 'default'}
                       size="small"
+                      sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}
                     />
                   </TableCell>
-                  <TableCell align="right">
+                  <TableCell align="right" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                     <IconButton
                       size="small"
                       onClick={() => openLogDialog(medication)}
                       color="primary"
                       title="Log dose"
                     >
-                      <CheckCircleIcon />
+                      <CheckCircleIcon fontSize="small" />
                     </IconButton>
                     {onEdit && (
                       <IconButton
@@ -169,7 +170,7 @@ const MedicationsTable: React.FC<MedicationsTableProps> = ({
                         color="primary"
                         title="Edit"
                       >
-                        <EditIcon />
+                        <EditIcon fontSize="small" />
                       </IconButton>
                     )}
                     <IconButton
@@ -178,7 +179,7 @@ const MedicationsTable: React.FC<MedicationsTableProps> = ({
                       color="error"
                       title="Delete"
                     >
-                      <DeleteIcon />
+                      <DeleteIcon fontSize="small" />
                     </IconButton>
                   </TableCell>
                 </TableRow>

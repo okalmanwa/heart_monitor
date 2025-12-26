@@ -15,6 +15,8 @@ import {
   DialogContent,
   DialogActions,
   LinearProgress,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import {
   Insights as InsightsIcon,
@@ -34,6 +36,8 @@ interface InsightsProps {
 }
 
 const Insights: React.FC<InsightsProps> = ({ onUpdate }) => {
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const [insights, setInsights] = useState<UserInsight[]>([])
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
@@ -63,11 +67,16 @@ const Insights: React.FC<InsightsProps> = ({ onUpdate }) => {
     try {
       setSummaryLoading(true)
       const response = await apiClient.get('/api/insights/summary/')
+      // Only set summary if it exists and has_insights is true
       if (response.data.has_insights && response.data.summary) {
         setSummary(response.data.summary)
+      } else {
+        // Clear summary if no insights or summary unavailable
+        setSummary(null)
       }
     } catch (err: any) {
       console.error('Failed to fetch summary:', err)
+      setSummary(null)
     } finally {
       setSummaryLoading(false)
     }
@@ -79,33 +88,91 @@ const Insights: React.FC<InsightsProps> = ({ onUpdate }) => {
   }, [])
 
   const handleGenerateInsights = async () => {
+    setGenerating(true)
+    setError('')
+    setSuccess('')
+    
+    // Set a timeout to ensure loading state is cleared even if request hangs
+    const timeoutId = setTimeout(() => {
+      console.warn('Insights generation request timed out, clearing loading state')
+      setGenerating(false)
+      setError('Request timed out. Please try again.')
+    }, 30000) // 30 second timeout
+    
     try {
-      setGenerating(true)
-      setError('')
-      setSuccess('')
+      console.log('Generating insights...')
+      const response = await apiClient.post('/api/insights/generate/', {}, {
+        timeout: 30000 // 30 second timeout
+      })
+      clearTimeout(timeoutId)
+      console.log('Insights generation response:', response.status, response.data)
       
-      const response = await apiClient.post('/api/insights/generate/')
-      
-      if (response.data.insights_created > 0) {
-        setSuccess(`Successfully generated ${response.data.insights_created} new insights!`)
-        // Refresh insights list
-        await fetchInsights()
-        await fetchSummary()
-        onUpdate?.()
+      // Handle async processing (202 Accepted)
+      if (response.status === 202) {
+        setSuccess('Insights are being generated. Refreshing in a few seconds...')
+        setGenerating(false)
         
-        // Clear success message after 5 seconds
-        setTimeout(() => setSuccess(''), 5000)
+        // Poll for new insights after a delay
+        setTimeout(async () => {
+          await fetchInsights()
+          await fetchSummary()
+          onUpdate?.()
+        }, 5000) // Wait 5 seconds then refresh
+        
+        // Clear success message after 10 seconds
+        setTimeout(() => setSuccess(''), 10000)
+        return
+      }
+      
+      // Check if response is successful (200 or 201)
+      if (response.status === 200 || response.status === 201) {
+        // Check if response has insights_created field
+        const insightsCreated = response.data?.insights_created ?? 0
+        
+        if (insightsCreated > 0) {
+          setSuccess(`Successfully generated ${insightsCreated} new insights!`)
+          // Refresh insights list
+          await fetchInsights()
+          // Wait a moment before fetching summary to ensure insights are saved
+          setTimeout(async () => {
+            await fetchSummary()
+          }, 1000)
+          onUpdate?.()
+          
+          // Clear success message after 5 seconds
+          setTimeout(() => setSuccess(''), 5000)
+        } else {
+          const message = response.data?.message || 'No new insights were generated. You may need more readings.'
+          setError(message)
+          // Still refresh to show any existing insights
+          await fetchInsights()
+          await fetchSummary()
+        }
       } else {
-        setError(response.data.message || 'No new insights were generated. You may need more readings.')
+        // Unexpected status code
+        setError('Unexpected response from server. Please try again.')
+        await fetchInsights()
       }
     } catch (err: any) {
+      clearTimeout(timeoutId)
       console.error('Failed to generate insights:', err)
-      setError(
+      const errorMessage = 
         err.response?.data?.error || 
         err.response?.data?.message || 
+        err.message ||
         'Failed to generate insights. Please try again.'
-      )
+      setError(errorMessage)
+      
+      // Still refresh insights in case some were created before the error
+      try {
+        await fetchInsights()
+        await fetchSummary()
+      } catch (refreshErr) {
+        console.error('Failed to refresh insights after error:', refreshErr)
+      }
     } finally {
+      clearTimeout(timeoutId)
+      console.log('Clearing generating state')
       setGenerating(false)
     }
   }
@@ -170,10 +237,19 @@ const Insights: React.FC<InsightsProps> = ({ onUpdate }) => {
   return (
     <Box>
       {/* Header with Generate Button */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <InsightsIcon color="primary" />
-          <Typography variant="h5">
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'flex-start', sm: 'center' }, 
+          mb: 3,
+          flexDirection: { xs: 'column', sm: 'row' },
+          gap: { xs: 2, sm: 0 }
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+          <InsightsIcon color="primary" sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }} />
+          <Typography variant="h5" sx={{ fontSize: { xs: '1.1rem', sm: '1.5rem' } }}>
             AI Health Insights
           </Typography>
           {unreadCount > 0 && (
@@ -181,6 +257,7 @@ const Insights: React.FC<InsightsProps> = ({ onUpdate }) => {
               label={`${unreadCount} new`} 
               color="primary" 
               size="small"
+              sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}
             />
           )}
         </Box>
@@ -190,6 +267,8 @@ const Insights: React.FC<InsightsProps> = ({ onUpdate }) => {
           onClick={handleGenerateInsights}
           disabled={generating}
           color="primary"
+          fullWidth={isMobile}
+          size={isMobile ? 'small' : 'medium'}
         >
           {generating ? 'Generating...' : 'Generate Insights'}
         </Button>
@@ -209,15 +288,15 @@ const Insights: React.FC<InsightsProps> = ({ onUpdate }) => {
 
       {/* AI Summary */}
       {summary && (
-        <Paper sx={{ p: 3, mb: 3, bgcolor: 'primary.light', color: 'primary.contrastText' }}>
+        <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, bgcolor: 'primary.light', color: 'primary.contrastText' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-            <AutoAwesomeIcon />
-            <Typography variant="h6">AI Summary</Typography>
+            <AutoAwesomeIcon sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }} />
+            <Typography variant="h6" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>AI Summary</Typography>
           </Box>
           {summaryLoading ? (
             <LinearProgress />
           ) : (
-            <Typography variant="body1">{summary}</Typography>
+            <Typography variant="body1" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>{summary}</Typography>
           )}
         </Paper>
       )}
@@ -263,29 +342,32 @@ const Insights: React.FC<InsightsProps> = ({ onUpdate }) => {
               onClick={() => handleOpenDialog(insight)}
             >
               <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1, flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 1, sm: 0 } }}>
                   <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
                     <Chip
                       icon={getSeverityIcon(insight.severity)}
                       label={insight.severity.toUpperCase()}
                       color={getSeverityColor(insight.severity)}
                       size="small"
+                      sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}
                     />
                     <Chip
                       label={insight.insight_type.replace('_', ' ').toUpperCase()}
                       color={getTypeColor(insight.insight_type)}
                       size="small"
                       variant="outlined"
+                      sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}
                     />
                     {!insight.is_read && (
                       <Chip
                         label="NEW"
                         color="primary"
                         size="small"
+                        sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}
                       />
                     )}
                   </Box>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
                     {format(new Date(insight.generated_at), 'MMM dd, yyyy HH:mm')}
                   </Typography>
                 </Box>
@@ -295,10 +377,11 @@ const Insights: React.FC<InsightsProps> = ({ onUpdate }) => {
                     mt: 1,
                     mb: 1,
                     fontWeight: insight.is_read ? 'normal' : 'medium',
+                    fontSize: { xs: '0.875rem', sm: '1rem' }
                   }}
                 >
-                  {insight.insight_text.length > 150
-                    ? `${insight.insight_text.substring(0, 150)}...`
+                  {insight.insight_text.length > (isMobile ? 100 : 150)
+                    ? `${insight.insight_text.substring(0, isMobile ? 100 : 150)}...`
                     : insight.insight_text}
                 </Typography>
                 {insight.is_read && (

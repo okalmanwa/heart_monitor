@@ -52,16 +52,16 @@ const HealthFactorsTable: React.FC<HealthFactorsTableProps> = ({
 
   return (
     <Box>
-      <TableContainer>
-        <Table>
+      <TableContainer sx={{ overflowX: 'auto' }}>
+        <Table sx={{ minWidth: 650 }}>
           <TableHead>
             <TableRow>
-              <TableCell>Date</TableCell>
-              <TableCell align="center">Sleep Quality</TableCell>
-              <TableCell align="center">Stress Level</TableCell>
-              <TableCell align="right">Exercise (min)</TableCell>
-              <TableCell>Notes</TableCell>
-              <TableCell align="right">Actions</TableCell>
+              <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Date</TableCell>
+              <TableCell align="center" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Sleep Quality</TableCell>
+              <TableCell align="center" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Stress Level</TableCell>
+              <TableCell align="right" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Exercise (min)</TableCell>
+              <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, display: { xs: 'none', lg: 'table-cell' } }}>Notes</TableCell>
+              <TableCell align="right" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -74,28 +74,30 @@ const HealthFactorsTable: React.FC<HealthFactorsTableProps> = ({
             ) : (
               factors.map((factor) => (
                 <TableRow key={factor.id}>
-                  <TableCell>
+                  <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                     {factor.date
                       ? format(new Date(factor.date), 'MMM dd, yyyy')
                       : 'N/A'}
                   </TableCell>
-                  <TableCell align="center">
+                  <TableCell align="center" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                     {renderValue(factor.sleep_quality, '/5')}
                   </TableCell>
-                  <TableCell align="center">
+                  <TableCell align="center" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                     {renderValue(factor.stress_level, '/5')}
                   </TableCell>
-                  <TableCell align="right">
+                  <TableCell align="right" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                     {renderValue(factor.exercise_duration, ' min')}
                   </TableCell>
-                  <TableCell>{factor.notes || '-'}</TableCell>
-                  <TableCell align="right">
+                  <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, display: { xs: 'none', lg: 'table-cell' } }}>
+                    {factor.notes || '-'}
+                  </TableCell>
+                  <TableCell align="right" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                     <IconButton
                       size="small"
                       onClick={() => factor.id && handleDelete(factor.id)}
                       color="error"
                     >
-                      <DeleteIcon />
+                      <DeleteIcon fontSize="small" />
                     </IconButton>
                   </TableCell>
                 </TableRow>
