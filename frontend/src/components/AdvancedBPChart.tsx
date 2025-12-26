@@ -11,11 +11,7 @@ import {
   Filler,
 } from 'chart.js'
 import { Line } from 'react-chartjs-2'
-import { Box, Typography, ButtonGroup, Button, Paper, Card, CardContent, Chip, Grid } from '@mui/material'
-import FavoriteIcon from '@mui/icons-material/Favorite'
-import TrendingUpIcon from '@mui/icons-material/TrendingUp'
-import TrendingDownIcon from '@mui/icons-material/TrendingDown'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import { Box, Typography, ButtonGroup, Button, Paper } from '@mui/material'
 import { BloodPressureReading } from '../types'
 import { format, subDays, subMonths, subYears, startOfDay, endOfDay } from 'date-fns'
 
@@ -205,13 +201,7 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
         position: 'top' as const,
       },
       title: {
-        display: true,
-        text: `📊 Your Blood Pressure Journey (${filteredReadings.length} readings)`,
-        font: {
-          size: 16,
-          weight: 'bold' as const,
-        },
-        color: '#333',
+        display: false,
       },
       tooltip: {
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -221,19 +211,16 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
           title: (context: any) => {
             const index = context[0].dataIndex
             const reading = filteredReadings[index]
-            return `📅 ${format(new Date(reading.recorded_at), 'MMM dd, yyyy h:mm a')}`
+            return format(new Date(reading.recorded_at), 'MMM dd, yyyy h:mm a')
           },
           label: (context: any) => {
-            const index = context.dataIndex
-            const reading = filteredReadings[index]
-            const emoji = reading.category === 'normal' ? '✅' : reading.category === 'elevated' ? '⚠️' : '🔴'
-            return `${context.dataset.label}: ${context.parsed.y} mmHg ${emoji}`
+            return `${context.dataset.label}: ${context.parsed.y} mmHg`
           },
           afterLabel: (context: any) => {
             const index = context.dataIndex
             const reading = filteredReadings[index]
             const category = reading.category?.replace('_', ' ').toUpperCase() || 'N/A'
-            const heartRate = reading.heart_rate ? ` | 💓 ${reading.heart_rate} BPM` : ''
+            const heartRate = reading.heart_rate ? ` | Heart Rate: ${reading.heart_rate} BPM` : ''
             return `Status: ${category}${heartRate}`
           },
         },
@@ -262,21 +249,12 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
         }}
       >
         <Box textAlign="center">
-          <FavoriteIcon sx={{ fontSize: 64, color: '#667eea', mb: 2, opacity: 0.5 }} />
           <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: '#333' }}>
-            📊 No Data Yet
+            No Data Yet
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
             Start tracking your blood pressure to see your health journey!
           </Typography>
-          <Chip 
-            label="💡 Add your first reading to get started"
-            sx={{ 
-              backgroundColor: 'rgba(102, 126, 234, 0.1)',
-              color: '#667eea',
-              fontWeight: 600,
-            }}
-          />
         </Box>
       </Paper>
     )
@@ -284,91 +262,21 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
 
   return (
     <Box>
-      {/* Statistics Cards */}
+      {/* Statistics - Simplified */}
       {stats && (
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={12} sm={4}>
-            <Card 
-              sx={{ 
-                background: stats.normalPercentage >= 70 
-                  ? 'linear-gradient(135deg, #4caf5015 0%, #4caf5005 100%)'
-                  : 'linear-gradient(135deg, #ff980015 0%, #ff980005 100%)',
-                border: `2px solid ${stats.normalPercentage >= 70 ? '#4caf5040' : '#ff980040'}`,
-                borderRadius: 3,
-              }}
-            >
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                  <CheckCircleIcon sx={{ color: stats.normalPercentage >= 70 ? '#4caf50' : '#ff9800' }} />
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: stats.normalPercentage >= 70 ? '#4caf50' : '#ff9800' }}>
-                    {stats.normalPercentage}%
-                  </Typography>
-                </Box>
-                <Typography variant="body2" color="text.secondary">
-                  {stats.normalPercentage >= 70 ? '✅ Normal Readings' : '⚠️ Keep Tracking!'}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <Card 
-              sx={{ 
-                background: 'linear-gradient(135deg, #667eea15 0%, #764ba205 100%)',
-                border: '2px solid #667eea40',
-                borderRadius: 3,
-              }}
-            >
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                  <FavoriteIcon sx={{ color: '#667eea' }} />
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#667eea' }}>
-                    {stats.avgSystolic}/{stats.avgDiastolic}
-                  </Typography>
-                </Box>
-                <Typography variant="body2" color="text.secondary">
-                  📊 Average BP
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <Card 
-              sx={{ 
-                background: stats.trend === 'improving' 
-                  ? 'linear-gradient(135deg, #4caf5015 0%, #4caf5005 100%)'
-                  : stats.trend === 'increasing'
-                  ? 'linear-gradient(135deg, #ff980015 0%, #ff980005 100%)'
-                  : 'linear-gradient(135deg, #75757515 0%, #75757505 100%)',
-                border: `2px solid ${stats.trend === 'improving' ? '#4caf5040' : stats.trend === 'increasing' ? '#ff980040' : '#75757540'}`,
-                borderRadius: 3,
-              }}
-            >
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                  {stats.trend === 'improving' ? (
-                    <TrendingDownIcon sx={{ color: '#4caf50' }} />
-                  ) : stats.trend === 'increasing' ? (
-                    <TrendingUpIcon sx={{ color: '#ff9800' }} />
-                  ) : (
-                    <TrendingUpIcon sx={{ color: '#757575', transform: 'rotate(90deg)' }} />
-                  )}
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      fontWeight: 700,
-                      color: stats.trend === 'improving' ? '#4caf50' : stats.trend === 'increasing' ? '#ff9800' : '#757575'
-                    }}
-                  >
-                    {stats.trend === 'improving' ? '📉 Improving' : stats.trend === 'increasing' ? '📈 Increasing' : '➡️ Stable'}
-                  </Typography>
-                </Box>
-                <Typography variant="body2" color="text.secondary">
-                  Trend: {stats.trendValue} mmHg
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+        <Box sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 2.5, alignItems: 'center' }}>
+          <Typography variant="body2" color="text.secondary">
+            <strong style={{ color: '#333', fontSize: '1.1em' }}>{stats.normalPercentage}%</strong> normal
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mx: 0.5 }}>•</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Average: <strong style={{ color: '#333', fontSize: '1.1em' }}>{stats.avgSystolic}/{stats.avgDiastolic}</strong>
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mx: 0.5 }}>•</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Trend: <strong style={{ color: '#333', fontSize: '1.1em' }}>{stats.trend === 'improving' ? 'Improving' : stats.trend === 'increasing' ? 'Increasing' : 'Stable'}</strong> ({stats.trendValue} mmHg)
+          </Typography>
+        </Box>
       )}
 
       <Paper 
@@ -428,7 +336,7 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
               }),
             }}
           >
-            📅 7 Days
+            7 Days
           </Button>
           <Button
             variant={timePeriod === '30d' ? 'contained' : 'outlined'}
@@ -442,7 +350,7 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
               }),
             }}
           >
-            📅 30 Days
+            30 Days
           </Button>
           <Button
             variant={timePeriod === '90d' ? 'contained' : 'outlined'}
@@ -456,7 +364,7 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
               }),
             }}
           >
-            📅 90 Days
+            90 Days
           </Button>
           <Button
             variant={timePeriod === '1y' ? 'contained' : 'outlined'}
@@ -470,7 +378,7 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
               }),
             }}
           >
-            📅 1 Year
+            1 Year
           </Button>
           <Button
             variant={timePeriod === 'all' ? 'contained' : 'outlined'}
@@ -484,7 +392,7 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
               }),
             }}
           >
-            📊 All Time
+            All Time
           </Button>
           <Button
             variant={timePeriod === 'custom' ? 'contained' : 'outlined'}
@@ -498,7 +406,7 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
               }),
             }}
           >
-            🎯 Custom
+            Custom
           </Button>
           </ButtonGroup>
         </Box>
@@ -537,38 +445,10 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
         <Line data={chartData} options={options} />
       </Box>
 
-      <Box mt={3}>
-        <Card 
-          sx={{ 
-            p: 2,
-            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-            borderRadius: 2,
-          }}
-        >
-          <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-            🎨 Color Guide:
-          </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
-            <Chip 
-              label="✅ Green = Normal"
-              size="small"
-              sx={{ backgroundColor: '#4caf5020', color: '#2e7d32', fontWeight: 600 }}
-            />
-            <Chip 
-              label="⚠️ Orange = Elevated"
-              size="small"
-              sx={{ backgroundColor: '#ff980020', color: '#f57c00', fontWeight: 600 }}
-            />
-            <Chip 
-              label="🔴 Red = High"
-              size="small"
-              sx={{ backgroundColor: '#f4433620', color: '#c62828', fontWeight: 600 }}
-            />
-          </Box>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>
-            💡 Hover over data points to see detailed information about each reading!
-          </Typography>
-        </Card>
+      <Box mt={2}>
+        <Typography variant="caption" color="text.secondary">
+          Hover over data points for details. Green = Normal, Orange = Elevated, Red = High
+        </Typography>
       </Box>
     </Paper>
     </Box>
