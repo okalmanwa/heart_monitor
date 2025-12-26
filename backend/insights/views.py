@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from .models import UserInsight
 from .serializers import UserInsightSerializer
+from .ai_service import generate_insights_with_ai, generate_insight_summary
+from notifications.tasks import send_insight_notification_email
 
 User = get_user_model()
 
@@ -36,4 +38,86 @@ class UserInsightViewSet(viewsets.ModelViewSet):
         insight.is_read = True
         insight.save()
         return Response({'status': 'marked as read'})
+
+    @action(detail=False, methods=['post'], url_path='generate')
+    def generate_insights(self, request):
+        """
+        Generate AI-powered insights for the current user or specified user (admin only)
+        """
+        # Determine target user
+        user_id = request.data.get('user_id')
+        if user_id and (request.user.is_staff or request.user.is_superuser):
+            # Admin can generate insights for any user
+            try:
+                target_user = User.objects.get(pk=user_id)
+            except User.DoesNotExist:
+                return Response(
+                    {'error': 'User not found'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            # Regular users can only generate insights for themselves
+            target_user = request.user
+        
+        try:
+            # Generate insights
+            created_insights = generate_insights_with_ai(target_user)
+            
+            if not created_insights:
+                return Response({
+                    'message': 'No insights generated. User needs at least one blood pressure reading.',
+                    'insights_created': 0
+                }, status=status.HTTP_200_OK)
+            
+            # Send notification email for each new insight (async)
+            for insight in created_insights:
+                send_insight_notification_email.delay(
+                    target_user.id,
+                    insight.insight_text
+                )
+            
+            # Serialize the created insights
+            serializer = self.get_serializer(created_insights, many=True)
+            
+            return Response({
+                'message': f'Successfully generated {len(created_insights)} insights',
+                'insights_created': len(created_insights),
+                'insights': serializer.data
+            }, status=status.HTTP_201_CREATED)
+            
+        except ValueError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'Failed to generate insights: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=False, methods=['get'], url_path='summary')
+    def get_summary(self, request):
+        """
+        Get an AI-generated summary of all insights for the current user
+        """
+        try:
+            summary = generate_insight_summary(request.user)
+            
+            if not summary:
+                return Response({
+                    'summary': 'No insights available to summarize.',
+                    'has_insights': False
+                }, status=status.HTTP_200_OK)
+            
+            return Response({
+                'summary': summary,
+                'has_insights': True
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response(
+                {'error': f'Failed to generate summary: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 

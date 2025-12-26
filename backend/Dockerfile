@@ -17,7 +17,7 @@ COPY requirements.txt /app/requirements.txt
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the code
+# Copy the rest of the code (Railway root_dir is already set to backend, so use .)
 COPY . /app/
 
 # Collect static files
@@ -27,5 +27,6 @@ RUN python manage.py collectstatic --noinput || true
 EXPOSE $PORT
 
 # Run migrations and start server
-CMD python manage.py migrate && gunicorn itaku_backend.wsgi:application --bind 0.0.0.0:$PORT
+# Use JSON format for CMD to handle signals properly
+CMD ["sh", "-c", "python manage.py migrate && gunicorn itaku_backend.wsgi:application --bind 0.0.0.0:$PORT"]
 

@@ -24,6 +24,7 @@ import MedicationsTable from '../components/MedicationsTable'
 import AdvancedBPChart from '../components/AdvancedBPChart'
 import CorrelationChart from '../components/CorrelationChart'
 import NotificationPreferences from '../components/NotificationPreferences'
+import Insights from '../components/Insights'
 import { BloodPressureReading, HealthFactor, Medication } from '../types'
 import apiClient from '../config/axios'
 
@@ -148,6 +149,7 @@ const Dashboard = () => {
             <Tab label="Health Factors" />
             <Tab label="Medications" />
             <Tab label="Charts" />
+            <Tab label="Insights" />
             <Tab label="Notifications" />
           </Tabs>
         </Box>
@@ -280,6 +282,16 @@ const Dashboard = () => {
         )}
 
         {activeTab === 4 && (
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <Paper sx={{ p: 3 }}>
+                <Insights />
+              </Paper>
+            </Grid>
+          </Grid>
+        )}
+
+        {activeTab === 5 && (
           <Grid container spacing={3}>
             <Grid item xs={12}>
               <NotificationPreferences />

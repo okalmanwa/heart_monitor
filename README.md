@@ -4,7 +4,7 @@
 
 ## Features
 
-### Phase 1 (MVP) - Current Implementation
+### Phase 1 (MVP) - ✅ Completed
 - ✅ User authentication (registration and login)
 - ✅ Blood pressure reading input (systolic, diastolic, heart rate, notes)
 - ✅ Dashboard with readings table
@@ -12,11 +12,13 @@
 - ✅ PDF export functionality
 - ✅ Print functionality
 
-### Phase 2 (Planned)
-- Advanced charting with multiple time periods
-- Email notifications for reminders
-- Medication tracking
-- Health factors tracking (sleep, stress, exercise)
+### Phase 2 - ✅ Completed
+- ✅ Advanced charting with multiple time periods (7d, 30d, 90d, 1y, custom range)
+- ✅ Email notifications for reminders (BP, medications, insights)
+- ✅ Medication tracking with dose logging
+- ✅ Health factors tracking (sleep, stress, exercise)
+- ✅ Correlation charts (BP vs Health Factors)
+- ✅ Notification preferences management
 
 ### Phase 3 (Planned)
 - AI/ML analysis service for pattern detection
@@ -165,6 +167,26 @@ The frontend will be available at `http://localhost:3000`
 - `PUT /api/health-factors/{id}/` - Update a health factor
 - `DELETE /api/health-factors/{id}/` - Delete a health factor
 
+### Medications
+- `GET /api/medications/medications/` - List all medications
+- `POST /api/medications/medications/` - Create a new medication
+- `GET /api/medications/medications/{id}/` - Get a specific medication
+- `PUT /api/medications/medications/{id}/` - Update a medication
+- `DELETE /api/medications/medications/{id}/` - Delete a medication
+- `POST /api/medications/medications/{id}/log_dose/` - Log a medication dose
+- `GET /api/medications/medications/active/` - Get all active medications
+
+### Medications - Logs
+- `GET /api/medications/medication-logs/` - List all medication logs
+- `POST /api/medications/medication-logs/` - Create a new medication log
+- `GET /api/medications/medication-logs/{id}/` - Get a specific log
+- `DELETE /api/medications/medication-logs/{id}/` - Delete a log
+
+### Notifications
+- `GET /api/notifications/preferences/my_preferences/` - Get current user's preferences
+- `PUT /api/notifications/preferences/my_preferences/` - Update notification preferences
+- `GET /api/notifications/logs/` - List notification logs
+
 ### Insights
 - `GET /api/insights/` - List all AI-generated insights
 - `GET /api/insights/{id}/` - Get a specific insight
@@ -193,7 +215,7 @@ Based on AHA (American Heart Association) guidelines:
 ## Development Roadmap
 
 - [x] Phase 1: MVP (Authentication, Reading Input, Basic Dashboard, Charts)
-- [ ] Phase 2: Notifications, Health Factors, Advanced Charts
+- [x] Phase 2: Notifications, Health Factors, Advanced Charts, Medication Tracking
 - [ ] Phase 3: AI/ML Service Integration
 - [ ] Phase 4: Mobile App, Doctor Sharing, Advanced Features
 

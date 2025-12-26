@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'accounts',
     'readings',
     'health_factors',
-    'insights',
+    'insights.apps.InsightsConfig',  # Use app config to register signals
     'medications',
     'notifications',
 ]
@@ -149,7 +149,7 @@ LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
 
-USE_I18N = True
+USE_I18N = False
 
 USE_TZ = True
 
@@ -223,4 +223,8 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
+
+# OpenAI Configuration for AI Insights
+# Set OPENAI_API_KEY in your .env file
+OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
 
