@@ -11,7 +11,10 @@ import {
   Legend,
 } from 'chart.js'
 import { Scatter, Bar } from 'react-chartjs-2'
-import { Box, Typography, Paper, Tabs, Tab } from '@mui/material'
+import { Box, Typography, Paper, Tabs, Tab, Card, CardContent, Chip } from '@mui/material'
+import BedtimeIcon from '@mui/icons-material/Bedtime'
+import SentimentVeryDissatisfiedIcon from '@mui/icons-material/SentimentVeryDissatisfied'
+import FitnessCenterIcon from '@mui/icons-material/FitnessCenter'
 import { BloodPressureReading, HealthFactor } from '../types'
 import { format, isSameDay } from 'date-fns'
 import { useState } from 'react'
@@ -150,7 +153,12 @@ const CorrelationChart: React.FC<CorrelationChartProps> = ({
       },
       title: {
         display: true,
-        text: 'Correlation Analysis',
+        text: '🔍 Discover Health Patterns',
+        font: {
+          size: 16,
+          weight: 'bold' as const,
+        },
+        color: '#333',
       },
     },
     scales: {
@@ -182,7 +190,12 @@ const CorrelationChart: React.FC<CorrelationChartProps> = ({
       },
       title: {
         display: true,
-        text: 'Average BP by Exercise Duration',
+        text: '💪 Exercise Impact on Blood Pressure',
+        font: {
+          size: 16,
+          weight: 'bold' as const,
+        },
+        color: '#333',
       },
     },
     scales: {
@@ -199,66 +212,175 @@ const CorrelationChart: React.FC<CorrelationChartProps> = ({
 
   if (matchedData.length === 0) {
     return (
-      <Paper sx={{ p: 3 }}>
-        <Box p={3} textAlign="center">
-          <Typography variant="body1" color="text.secondary">
-            No matching data found. Add health factors and blood pressure readings on the same dates to see correlations.
+      <Paper 
+        sx={{ 
+          p: 4,
+          borderRadius: 3,
+          background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        }}
+      >
+        <Box textAlign="center">
+          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 2 }}>
+            <BedtimeIcon sx={{ fontSize: 48, color: '#667eea', opacity: 0.5 }} />
+            <FitnessCenterIcon sx={{ fontSize: 48, color: '#667eea', opacity: 0.5 }} />
+            <SentimentVeryDissatisfiedIcon sx={{ fontSize: 48, color: '#667eea', opacity: 0.5 }} />
+          </Box>
+          <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: '#333' }}>
+            🔍 No Correlation Data Yet
           </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+            Track both blood pressure and health factors on the same dates to discover patterns!
+          </Typography>
+          <Chip 
+            label="💡 Tip: Record BP and health factors on the same day"
+            sx={{ 
+              backgroundColor: 'rgba(102, 126, 234, 0.1)',
+              color: '#667eea',
+              fontWeight: 600,
+            }}
+          />
         </Box>
       </Paper>
     )
   }
 
   return (
-    <Paper sx={{ p: { xs: 2, sm: 3 } }}>
-      <Typography 
-        variant="h6" 
-        gutterBottom
-        sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}
+    <Box>
+      <Paper 
+        sx={{ 
+          p: { xs: 2, sm: 3 },
+          borderRadius: 3,
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+          mb: 2,
+        }}
       >
-        BP vs Health Factors Correlation
-      </Typography>
-      <Typography 
-        variant="caption" 
-        color="text.secondary" 
-        sx={{ mb: 2, display: 'block', fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
-      >
-        Showing {matchedData.length} days with both BP readings and health factors
-      </Typography>
-
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2, overflowX: 'auto', width: '100%' }}>
-        <Tabs 
-          value={activeTab} 
-          onChange={(_, newValue) => setActiveTab(newValue)}
-          variant="scrollable"
-          scrollButtons="auto"
-          allowScrollButtonsMobile
-          sx={{
-            '& .MuiTab-root': {
-              fontSize: { xs: '0.7rem', sm: '0.875rem' },
-              minWidth: { xs: 80, sm: 120 },
-              px: { xs: 1, sm: 2 }
-            }
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+          <Box
+            sx={{
+              width: 48,
+              height: 48,
+              borderRadius: 2,
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Typography sx={{ fontSize: '1.5rem' }}>🔍</Typography>
+          </Box>
+          <Box>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontSize: { xs: '1.2rem', sm: '1.4rem' },
+                fontWeight: 700,
+              }}
+            >
+              Health Pattern Discovery
+            </Typography>
+            <Typography 
+              variant="body2" 
+              color="text.secondary"
+            >
+              See how sleep, stress, and exercise affect your blood pressure
+            </Typography>
+          </Box>
+        </Box>
+        
+        <Card 
+          sx={{ 
+            p: 2,
+            mb: 2,
+            background: 'linear-gradient(135deg, #667eea15 0%, #764ba205 100%)',
+            border: '2px solid #667eea40',
+            borderRadius: 2,
           }}
         >
-          <Tab label="Sleep Quality" />
-          <Tab label="Stress Level" />
-          <Tab label="Exercise" />
-        </Tabs>
-      </Box>
+          <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+            📊 Data Summary
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Analyzing {matchedData.length} day{matchedData.length !== 1 ? 's' : ''} with both BP readings and health factors
+          </Typography>
+        </Card>
 
-      <Box sx={{ height: { xs: 300, sm: 400 }, position: 'relative' }}>
-        {activeTab === 0 && sleepData && (
-          <Scatter data={sleepData} options={scatterOptions} />
-        )}
-        {activeTab === 1 && stressData && (
-          <Scatter data={stressData} options={scatterOptions} />
-        )}
-        {activeTab === 2 && exerciseData && (
-          <Bar data={exerciseData} options={barOptions} />
-        )}
-      </Box>
-    </Paper>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2, overflowX: 'auto', width: '100%' }}>
+          <Tabs 
+            value={activeTab} 
+            onChange={(_, newValue) => setActiveTab(newValue)}
+            variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
+            sx={{
+              '& .MuiTabs-indicator': {
+                height: 3,
+                borderRadius: '3px 3px 0 0',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              },
+              '& .MuiTab-root': {
+                fontSize: { xs: '0.8rem', sm: '0.95rem' },
+                minWidth: { xs: 100, sm: 140 },
+                px: { xs: 1.5, sm: 2.5 },
+                textTransform: 'none',
+                fontWeight: 600,
+                '&:hover': {
+                  backgroundColor: 'rgba(102, 126, 234, 0.04)',
+                },
+              },
+            }}
+          >
+            <Tab 
+              icon={<BedtimeIcon sx={{ fontSize: '1.2rem', mr: 0.5 }} />}
+              iconPosition="start"
+              label="😴 Sleep Quality" 
+            />
+            <Tab 
+              icon={<SentimentVeryDissatisfiedIcon sx={{ fontSize: '1.2rem', mr: 0.5 }} />}
+              iconPosition="start"
+              label="😰 Stress Level" 
+            />
+            <Tab 
+              icon={<FitnessCenterIcon sx={{ fontSize: '1.2rem', mr: 0.5 }} />}
+              iconPosition="start"
+              label="💪 Exercise" 
+            />
+          </Tabs>
+        </Box>
+
+        <Box sx={{ height: { xs: 300, sm: 400 }, position: 'relative' }}>
+          {activeTab === 0 && sleepData && (
+            <Scatter data={sleepData} options={scatterOptions} />
+          )}
+          {activeTab === 1 && stressData && (
+            <Scatter data={stressData} options={scatterOptions} />
+          )}
+          {activeTab === 2 && exerciseData && (
+            <Bar data={exerciseData} options={barOptions} />
+          )}
+        </Box>
+
+        <Card 
+          sx={{ 
+            mt: 3,
+            p: 2,
+            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+            borderRadius: 2,
+          }}
+        >
+          <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+            💡 How to Read This Chart:
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+            {activeTab === 0 && '😴 Better sleep quality (higher number) often correlates with lower blood pressure. Look for patterns!'}
+            {activeTab === 1 && '😰 Higher stress levels may correlate with elevated blood pressure. Track both to see connections!'}
+            {activeTab === 2 && '💪 More exercise often helps maintain healthier blood pressure. See how your activity affects your BP!'}
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+            Hover over data points to see specific values and discover your personal health patterns!
+          </Typography>
+        </Card>
+      </Paper>
+    </Box>
   )
 }
 
