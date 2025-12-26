@@ -68,6 +68,12 @@ CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in CSRF_TRUSTED_ORIGINS if ori
 railway_domain = 'https://heartmonitor-production.up.railway.app'
 if railway_domain not in CSRF_TRUSTED_ORIGINS:
     CSRF_TRUSTED_ORIGINS.append(railway_domain)
+
+# Add Vercel frontend domain to CSRF trusted origins
+vercel_domain = 'https://heart-monitor-one.vercel.app'
+if vercel_domain not in CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS.append(vercel_domain)
+
 CSRF_TRUSTED_ORIGINS = list(set(CSRF_TRUSTED_ORIGINS))  # Remove duplicates
 
 # CSRF cookie settings
@@ -195,16 +201,43 @@ SIMPLE_JWT = {
 # For production, add your frontend domain here
 cors_origins = config(
     'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173'
+    default='http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173,https://heart-monitor-one.vercel.app'
 )
 # Filter out empty strings and invalid values
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins.split(',') if origin.strip() and origin.strip() not in ['True', 'False', 'true', 'false']]
+
+# Add Vercel domain if not already present
+vercel_domain = 'https://heart-monitor-one.vercel.app'
+if vercel_domain not in CORS_ALLOWED_ORIGINS:
+    CORS_ALLOWED_ORIGINS.append(vercel_domain)
 
 # For development/testing - allow all origins temporarily
 # Remove this in production and use CORS_ALLOWED_ORIGINS instead
 CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default=False, cast=bool)
 
 CORS_ALLOW_CREDENTIALS = True
+
+# CORS allowed methods and headers
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 # Email Configuration
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
