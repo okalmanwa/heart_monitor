@@ -503,29 +503,29 @@ const Insights: React.FC<InsightsProps> = ({ onUpdate }) => {
           <CardContent sx={{ p: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2, flexWrap: 'wrap', gap: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1 }}>
-                <Box
+              <Box
+                sx={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <AutoAwesomeIcon sx={{ fontSize: '1.5rem' }} />
+              </Box>
+              <Box>
+                <Typography
+                  variant="h6"
                   sx={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: '50%',
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    fontWeight: 700,
+                    fontSize: { xs: '1rem', sm: '1.25rem' },
                   }}
                 >
-                  <AutoAwesomeIcon sx={{ fontSize: '1.5rem' }} />
-                </Box>
-                <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: 700,
-                      fontSize: { xs: '1rem', sm: '1.25rem' },
-                    }}
-                  >
-                    AI Health Summary
-                  </Typography>
+                  AI Health Summary
+                </Typography>
                 </Box>
               </Box>
               <Button
@@ -533,7 +533,7 @@ const Insights: React.FC<InsightsProps> = ({ onUpdate }) => {
                 startIcon={generating ? <CircularProgress size={20} color="inherit" /> : <AutoAwesomeIcon />}
                 onClick={handleGenerateInsights}
                 disabled={generating}
-                sx={{
+                  sx={{
                   background: 'rgba(255, 255, 255, 0.2)',
                   backdropFilter: 'blur(10px)',
                   color: 'white',
@@ -636,9 +636,9 @@ const Insights: React.FC<InsightsProps> = ({ onUpdate }) => {
       <Box 
         sx={{ 
           display: 'flex', 
-          justifyContent: 'space-between',
-          alignItems: { xs: 'flex-start', sm: 'center' },
-          gap: 2, 
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'flex-start', sm: 'center' }, 
+          gap: 2,
           mb: 4,
           pb: 2,
           borderBottom: '2px solid',
@@ -705,34 +705,34 @@ const Insights: React.FC<InsightsProps> = ({ onUpdate }) => {
           </Box>
         </Box>
         {!summary && (
-          <Button
-            variant="contained"
-            startIcon={generating ? <CircularProgress size={20} color="inherit" /> : <AutoAwesomeIcon />}
-            onClick={handleGenerateInsights}
-            disabled={generating}
-            sx={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
-              px: 3,
-              py: 1.5,
-              borderRadius: 2,
-              textTransform: 'none',
-              fontSize: { xs: '0.875rem', sm: '1rem' },
-              fontWeight: 600,
-              boxShadow: '0 4px 16px rgba(102, 126, 234, 0.4)',
-              '&:hover': {
-                boxShadow: '0 6px 20px rgba(102, 126, 234, 0.5)',
-                transform: 'translateY(-2px)',
-              },
-              '&:disabled': {
-                background: 'rgba(102, 126, 234, 0.5)',
-              },
-              transition: 'all 0.2s ease',
-              fullWidth: isMobile,
-            }}
-          >
-            {generating ? (generationStatus || 'Generating...') : 'Generate Insights'}
-          </Button>
+        <Button
+          variant="contained"
+          startIcon={generating ? <CircularProgress size={20} color="inherit" /> : <AutoAwesomeIcon />}
+          onClick={handleGenerateInsights}
+          disabled={generating}
+          sx={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            px: 3,
+            py: 1.5,
+            borderRadius: 2,
+            textTransform: 'none',
+            fontSize: { xs: '0.875rem', sm: '1rem' },
+            fontWeight: 600,
+            boxShadow: '0 4px 16px rgba(102, 126, 234, 0.4)',
+            '&:hover': {
+              boxShadow: '0 6px 20px rgba(102, 126, 234, 0.5)',
+              transform: 'translateY(-2px)',
+            },
+            '&:disabled': {
+              background: 'rgba(102, 126, 234, 0.5)',
+            },
+            transition: 'all 0.2s ease',
+            fullWidth: isMobile,
+          }}
+        >
+          {generating ? (generationStatus || 'Generating...') : 'Generate Insights'}
+        </Button>
         )}
       </Box>
 

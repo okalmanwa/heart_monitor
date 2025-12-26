@@ -148,9 +148,9 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
         const errorKeys = Object.keys(errorMsg)
         if (errorKeys.length > 0) {
           const firstError = errorMsg[errorKeys[0]]
-          setError(Array.isArray(firstError) ? firstError[0] : String(firstError))
-        } else {
-          setError('Failed to save medication. Please try again.')
+        setError(Array.isArray(firstError) ? firstError[0] : String(firstError))
+      } else {
+        setError('Failed to save medication. Please try again.')
         }
       } else if (err.response?.status === 404) {
         setError('Medication not found. It may have been deleted.')

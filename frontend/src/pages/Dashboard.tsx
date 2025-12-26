@@ -120,7 +120,7 @@ const Dashboard = () => {
   const handleMedicationUpdated = (updatedMedication: Medication) => {
     // Update local state immediately with the updated medication
     if (updatedMedication.id) {
-      setMedications(medications.map(m => m.id === updatedMedication.id ? updatedMedication : m))
+    setMedications(medications.map(m => m.id === updatedMedication.id ? updatedMedication : m))
     }
     setEditingMedication(null)
   }
