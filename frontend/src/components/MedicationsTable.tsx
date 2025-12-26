@@ -43,6 +43,7 @@ const MedicationsTable: React.FC<MedicationsTableProps> = ({
   const [logDialogOpen, setLogDialogOpen] = useState(false)
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null)
   const [logNotes, setLogNotes] = useState('')
+  const [loggingDose, setLoggingDose] = useState(false)
 
   const frequencyLabels: Record<Medication['frequency'], string> = {
     once_daily: 'Once Daily',
@@ -67,8 +68,9 @@ const MedicationsTable: React.FC<MedicationsTableProps> = ({
   }
 
   const handleLogDose = async () => {
-    if (!selectedMedication?.id) return
+    if (!selectedMedication?.id || loggingDose) return
 
+    setLoggingDose(true)
     try {
       await apiClient.post(`/api/medications/medications/${selectedMedication.id}/log_dose/`, {
         taken_at: new Date().toISOString(),
@@ -76,17 +78,20 @@ const MedicationsTable: React.FC<MedicationsTableProps> = ({
       })
       setLogDialogOpen(false)
       setLogNotes('')
+      const medToUpdate = selectedMedication
       setSelectedMedication(null)
       // Refresh the medication list if onMedicationUpdated is provided
-      if (onMedicationUpdated && selectedMedication) {
+      if (onMedicationUpdated && medToUpdate) {
         // Fetch updated medication
-        const response = await apiClient.get(`/api/medications/medications/${selectedMedication.id}/`)
+        const response = await apiClient.get(`/api/medications/medications/${medToUpdate.id}/`)
         onMedicationUpdated(response.data)
       }
       alert('Dose logged successfully!')
     } catch (error) {
       console.error('Failed to log dose:', error)
       alert('Failed to log dose. Please try again.')
+    } finally {
+      setLoggingDose(false)
     }
   }
 
@@ -189,7 +194,7 @@ const MedicationsTable: React.FC<MedicationsTableProps> = ({
         </Table>
       </TableContainer>
 
-      <Dialog open={logDialogOpen} onClose={() => setLogDialogOpen(false)}>
+      <Dialog open={logDialogOpen} onClose={() => !loggingDose && setLogDialogOpen(false)}>
         <DialogTitle>Log Medication Dose</DialogTitle>
         <DialogContent>
           <Typography variant="body2" sx={{ mb: 2 }}>
@@ -203,12 +208,20 @@ const MedicationsTable: React.FC<MedicationsTableProps> = ({
             value={logNotes}
             onChange={(e) => setLogNotes(e.target.value)}
             placeholder="e.g., Taken with food"
+            disabled={loggingDose}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setLogDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleLogDose} variant="contained">
-            Log Dose
+          <Button onClick={() => setLogDialogOpen(false)} disabled={loggingDose}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleLogDose} 
+            variant="contained"
+            disabled={loggingDose}
+            startIcon={loggingDose ? <CircularProgress size={20} color="inherit" /> : null}
+          >
+            {loggingDose ? 'Logging...' : 'Log Dose'}
           </Button>
         </DialogActions>
       </Dialog>

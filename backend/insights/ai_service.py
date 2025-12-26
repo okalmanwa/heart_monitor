@@ -10,7 +10,7 @@ from openai import OpenAI
 from readings.models import BloodPressureReading
 from health_factors.models import HealthFactor
 from medications.models import Medication
-from .models import UserInsight
+from .models import UserInsight, UserInsightSummary
 
 User = get_user_model()
 
@@ -150,32 +150,49 @@ Recent Health Factors (last 10):
 Active Medications:
 {json.dumps(health_data['medications'], indent=2)}
 
-Please provide insights in the following JSON format. For each insight, provide:
+Please provide EXACTLY 4 insights, one of each type. For each insight, provide:
 1. insight_text: A clear, actionable insight (2-3 sentences max)
-2. insight_type: One of: "trend", "anomaly", "correlation", "alert"
+2. insight_type: One of: "trend", "anomaly", "correlation", "alert" (each type must appear exactly once)
 3. severity: One of: "low", "medium", "high"
 
-Focus on:
-- Trends in blood pressure over time
-- Correlations between health factors (sleep, stress, exercise) and BP
-- Anomalies or concerning patterns
-- Alerts for high readings or concerning trends
-- Medication effects if applicable
+Required insight types (provide exactly one of each):
+- "trend": Trends in blood pressure over time
+- "anomaly": Anomalies or unusual patterns in the data
+- "correlation": Correlations between health factors (sleep, stress, exercise) and BP
+- "alert": Alerts for high readings or concerning trends
 
-Return ONLY a JSON array of insights, no other text. Format:
+Return ONLY a JSON array with exactly 4 insights, one for each type. No duplicates. Format:
 [
   {{
     "insight_text": "...",
     "insight_type": "trend",
     "severity": "medium"
   }},
-  ...
+  {{
+    "insight_text": "...",
+    "insight_type": "anomaly",
+    "severity": "low"
+  }},
+  {{
+    "insight_text": "...",
+    "insight_type": "correlation",
+    "severity": "medium"
+  }},
+  {{
+    "insight_text": "...",
+    "insight_type": "alert",
+    "severity": "high"
+  }}
 ]
 
-IMPORTANT: Be medically accurate but not alarmist. Always recommend consulting healthcare providers for serious concerns."""
+IMPORTANT: 
+- Provide exactly 4 insights, one of each type
+- No duplicate insight types
+- Be medically accurate but not alarmist
+- Always recommend consulting healthcare providers for serious concerns."""
 
     try:
-        # Call OpenAI API
+        # Call OpenAI API with timeout
         response = client.chat.completions.create(
             model="gpt-4o-mini",  # Using gpt-4o-mini for cost efficiency
             messages=[
@@ -189,7 +206,8 @@ IMPORTANT: Be medically accurate but not alarmist. Always recommend consulting h
                 }
             ],
             temperature=0.7,
-            max_tokens=1000
+            max_tokens=1000,
+            timeout=30.0  # 30 second timeout
         )
         
         # Parse response
@@ -203,23 +221,56 @@ IMPORTANT: Be medically accurate but not alarmist. Always recommend consulting h
         
         insights_data = json.loads(response_text)
         
-        # Create UserInsight objects
+        # Ensure we have exactly one of each type, no duplicates
+        valid_types = ['trend', 'anomaly', 'correlation', 'alert']
+        type_seen = set()
         created_insights = []
+        
         for insight_data in insights_data:
-            # Validate and create insight
+            # Validate and get insight type
             insight_type = insight_data.get('insight_type', 'trend')
-            if insight_type not in ['trend', 'anomaly', 'correlation', 'alert']:
-                insight_type = 'trend'
+            if insight_type not in valid_types:
+                # Skip invalid types
+                continue
             
+            # Skip if we've already seen this type
+            if insight_type in type_seen:
+                continue
+            
+            # Mark this type as seen
+            type_seen.add(insight_type)
+            
+            # Validate severity
             severity = insight_data.get('severity', 'low')
             if severity not in ['low', 'medium', 'high']:
                 severity = 'low'
             
+            # Create insight
             insight = UserInsight.objects.create(
                 user=user,
                 insight_text=insight_data.get('insight_text', ''),
                 insight_type=insight_type,
                 severity=severity,
+                is_read=False
+            )
+            created_insights.append(insight)
+        
+        # If we're missing any types, create fallback insights for missing types
+        missing_types = set(valid_types) - type_seen
+        for missing_type in missing_types:
+            # Create a generic insight for the missing type
+            fallback_messages = {
+                'trend': 'Continue monitoring your blood pressure trends over time.',
+                'anomaly': 'Watch for any unusual patterns in your readings.',
+                'correlation': 'Track how lifestyle factors affect your blood pressure.',
+                'alert': 'Stay vigilant about your blood pressure readings.'
+            }
+            
+            insight = UserInsight.objects.create(
+                user=user,
+                insight_text=fallback_messages.get(missing_type, 'Continue monitoring your health data.'),
+                insight_type=missing_type,
+                severity='low',
                 is_read=False
             )
             created_insights.append(insight)
@@ -244,34 +295,60 @@ IMPORTANT: Be medically accurate but not alarmist. Always recommend consulting h
         raise
 
 
-def generate_insight_summary(user) -> Optional[str]:
+def generate_and_cache_insight_summary(user, force_regenerate=False) -> Optional[str]:
     """
-    Generate a brief summary of all insights for a user
+    Generate a brief summary of all insights for a user and cache it
     Returns a summary string or None
     """
+    # Check if we have a cached summary
+    if not force_regenerate:
+        try:
+            cached_summary = UserInsightSummary.objects.get(user=user)
+            # Get current insight count
+            current_count = UserInsight.objects.filter(user=user).count()
+            # If insight count hasn't changed, return cached summary
+            if cached_summary.insight_count == current_count:
+                return cached_summary.summary_text
+        except UserInsightSummary.DoesNotExist:
+            pass
+    
     client = get_openai_client()
     if not client:
         return None
     
-    # Get recent insights
+    # Get recent insights (all insights, not just 10)
     recent_insights = UserInsight.objects.filter(
         user=user
-    ).order_by('-generated_at')[:10]
+    ).order_by('-generated_at')
     
     if not recent_insights:
+        # Delete cached summary if no insights
+        UserInsightSummary.objects.filter(user=user).delete()
         return None
     
+    # Group insights by type and severity for better summary
+    insights_by_type = {}
+    for insight in recent_insights:
+        if insight.insight_type not in insights_by_type:
+            insights_by_type[insight.insight_type] = []
+        insights_by_type[insight.insight_type].append(insight)
+    
+    # Format insights for prompt
     insights_text = "\n".join([
-        f"- {insight.insight_text} ({insight.insight_type}, {insight.severity})"
-        for insight in recent_insights
+        f"- {insight.insight_text} (Type: {insight.insight_type}, Severity: {insight.severity})"
+        for insight in recent_insights[:20]  # Limit to most recent 20
     ])
     
-    prompt = f"""Based on these health insights, provide a brief 2-3 sentence summary 
-of the patient's overall health status and key recommendations:
+    prompt = f"""Based on these health insights, provide a concise 2-4 sentence summary 
+of the patient's overall health status and actionable recommendations. Focus on:
+1. Overall health status based on the insights
+2. Key actions the patient should take
+3. Important patterns or concerns to monitor
 
+Recent Health Insights:
 {insights_text}
 
-Provide a concise, actionable summary."""
+Provide a clear, actionable summary that helps the patient understand what to do next."""
     
     try:
         response = client.chat.completions.create(
@@ -279,7 +356,7 @@ Provide a concise, actionable summary."""
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a medical AI assistant providing health summaries."
+                    "content": "You are a medical AI assistant providing clear, actionable health summaries. Be concise, helpful, and focus on what the patient should do."
                 },
                 {
                     "role": "user",
@@ -287,10 +364,21 @@ Provide a concise, actionable summary."""
                 }
             ],
             temperature=0.7,
-            max_tokens=200
+            max_tokens=300
         )
         
-        return response.choices[0].message.content.strip()
+        summary_text = response.choices[0].message.content.strip()
+        
+        # Cache the summary
+        UserInsightSummary.objects.update_or_create(
+            user=user,
+            defaults={
+                'summary_text': summary_text,
+                'insight_count': recent_insights.count()
+            }
+        )
+        
+        return summary_text
     except Exception as e:
         print(f"Error generating summary: {e}")
         return None

@@ -20,7 +20,6 @@ import HealthAndSafetyIcon from '@mui/icons-material/HealthAndSafety'
 import MedicationIcon from '@mui/icons-material/Medication'
 import BarChartIcon from '@mui/icons-material/BarChart'
 import LightbulbIcon from '@mui/icons-material/Lightbulb'
-import NotificationsIcon from '@mui/icons-material/Notifications'
 import { useAuth } from '../contexts/AuthContext'
 import ReadingForm from '../components/ReadingForm'
 import ReadingsTable from '../components/ReadingsTable'
@@ -32,7 +31,6 @@ import MedicationsTable from '../components/MedicationsTable'
 import AdvancedBPChart from '../components/AdvancedBPChart'
 import CorrelationChart from '../components/CorrelationChart'
 import PulseRateChart from '../components/PulseRateChart'
-import NotificationPreferences from '../components/NotificationPreferences'
 import Insights from '../components/Insights'
 import { BloodPressureReading, HealthFactor, Medication } from '../types'
 import apiClient from '../config/axios'
@@ -120,7 +118,10 @@ const Dashboard = () => {
   }
 
   const handleMedicationUpdated = (updatedMedication: Medication) => {
-    setMedications(medications.map(m => m.id === updatedMedication.id ? updatedMedication : m))
+    // Update local state immediately with the updated medication
+    if (updatedMedication.id) {
+      setMedications(medications.map(m => m.id === updatedMedication.id ? updatedMedication : m))
+    }
     setEditingMedication(null)
   }
 
@@ -186,15 +187,7 @@ const Dashboard = () => {
       </AppBar>
 
       <Container maxWidth="lg" sx={{ mt: { xs: 2, sm: 4 }, mb: { xs: 2, sm: 4 }, px: { xs: 1, sm: 2 } }}>
-        <Typography 
-          variant="h4" 
-          gutterBottom
-          sx={{ fontSize: { xs: '1.5rem', sm: '2.125rem' } }}
-        >
-          Welcome, {user?.first_name || user?.username || 'User'}!
-        </Typography>
-
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3, overflowX: 'auto' }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: { xs: 2, sm: 3 }, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <Tabs 
             value={activeTab} 
             onChange={(_, newValue) => setActiveTab(newValue)}
@@ -202,59 +195,64 @@ const Dashboard = () => {
             scrollButtons="auto"
             allowScrollButtonsMobile
             sx={{
+              minHeight: { xs: 48, sm: 64 },
+              '& .MuiTabs-scrollButtons': {
+                width: { xs: 32, sm: 40 },
+                '&.Mui-disabled': {
+                  opacity: 0.3,
+                },
+              },
               '& .MuiTab-root': {
-                fontSize: { xs: '0.7rem', sm: '0.875rem' },
-                minWidth: { xs: 90, sm: 120 },
-                px: { xs: 1.5, sm: 2 },
-                gap: { xs: 0.5, sm: 1 },
-                flexDirection: { xs: 'row', sm: 'row' },
+                fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                fontWeight: 500,
+                minWidth: { xs: 80, sm: 120 },
+                px: { xs: 1.5, sm: 2.5 },
+                py: { xs: 1, sm: 1.5 },
+                textTransform: 'none',
+                color: 'text.secondary',
+                minHeight: { xs: 48, sm: 64 },
+                '&:hover': {
+                  color: 'primary.main',
+                },
+                '&.Mui-selected': {
+                  color: 'primary.main',
+                  fontWeight: 600,
+                },
                 '& .MuiTab-iconWrapper': {
-                  marginRight: { xs: 0.5, sm: 1 }
-                }
-              }
+                  marginRight: { xs: '0.5rem', sm: '0.75rem' },
+                },
+              },
             }}
           >
             <Tab 
-              icon={<MonitorHeartIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />}
+              icon={<MonitorHeartIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.2rem' } }} />}
               iconPosition="start"
               label={isMobile ? "BP" : "Blood Pressure"}
               aria-label="Blood Pressure"
-              sx={{ textTransform: 'none' }}
             />
             <Tab 
-              icon={<HealthAndSafetyIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />}
+              icon={<HealthAndSafetyIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.2rem' } }} />}
               iconPosition="start"
               label={isMobile ? "Health" : "Health Factors"}
               aria-label="Health Factors"
-              sx={{ textTransform: 'none' }}
             />
             <Tab 
-              icon={<MedicationIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />}
+              icon={<MedicationIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.2rem' } }} />}
               iconPosition="start"
               label={isMobile ? "Meds" : "Medications"}
               aria-label="Medications"
-              sx={{ textTransform: 'none' }}
             />
             <Tab 
-              icon={<BarChartIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />}
+              icon={<BarChartIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.2rem' } }} />}
               iconPosition="start"
               label="Charts"
               aria-label="Charts"
-              sx={{ textTransform: 'none' }}
             />
             <Tab 
-              icon={<LightbulbIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />}
+              icon={<LightbulbIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.2rem' } }} />}
               iconPosition="start"
               label="Insights"
               aria-label="AI Insights"
-              sx={{ textTransform: 'none' }}
-            />
-            <Tab 
-              icon={<NotificationsIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />}
-              iconPosition="start"
-              label={isMobile ? "Alerts" : "Notifications"}
-              aria-label="Notifications"
-              sx={{ textTransform: 'none' }}
             />
           </Tabs>
         </Box>
@@ -395,14 +393,6 @@ const Dashboard = () => {
               <Paper sx={{ p: { xs: 2, sm: 3 } }}>
                 <Insights />
               </Paper>
-            </Grid>
-          </Grid>
-        )}
-
-        {activeTab === 5 && (
-          <Grid container spacing={{ xs: 2, sm: 3 }}>
-            <Grid item xs={12}>
-              <NotificationPreferences />
             </Grid>
           </Grid>
         )}

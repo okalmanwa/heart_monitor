@@ -8,6 +8,7 @@ import {
   Typography,
   Box,
   Alert,
+  CircularProgress,
 } from '@mui/material'
 import FavoriteIcon from '@mui/icons-material/Favorite'
 import { useAuth } from '../contexts/AuthContext'
@@ -16,17 +17,21 @@ const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const { login } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setLoading(true)
     try {
       await login(email, password)
       navigate('/dashboard')
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Login failed. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -117,9 +122,11 @@ const Login = () => {
               type="submit"
               fullWidth
               variant="contained"
+              disabled={loading}
               sx={{ mt: 3, mb: 2 }}
+              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
             >
-              Sign In
+              {loading ? 'Signing In...' : 'Sign In'}
             </Button>
             <Box textAlign="center">
               <Link to="/register" style={{ textDecoration: 'none' }}>

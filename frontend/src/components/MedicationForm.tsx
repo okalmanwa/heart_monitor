@@ -9,7 +9,10 @@ import {
   Grid,
   FormControlLabel,
   Switch,
+  CircularProgress,
+  Snackbar,
 } from '@mui/material'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import apiClient from '../config/axios'
 import { Medication } from '../types'
 
@@ -45,18 +48,19 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
 
   // Update form fields when initialData changes (for editing)
   useEffect(() => {
-    if (initialData) {
+    if (initialData?.id) {
+      // Editing mode - populate form with medication data
       setName(initialData.name || '')
       setDosage(initialData.dosage || '')
       setFrequency(initialData.frequency || 'once_daily')
-      setStartDate(initialData.start_date || new Date().toISOString().split('T')[0])
-      setEndDate(initialData.end_date || '')
+      setStartDate(initialData.start_date ? initialData.start_date.split('T')[0] : new Date().toISOString().split('T')[0])
+      setEndDate(initialData.end_date ? initialData.end_date.split('T')[0] : '')
       setIsActive(initialData.is_active ?? true)
       setNotes(initialData.notes || '')
       setError('')
       setSuccess(false)
     } else {
-      // Reset form when initialData is cleared (new medication)
+      // Add mode - reset form
       setName('')
       setDosage('')
       setFrequency('once_daily')
@@ -67,7 +71,7 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
       setError('')
       setSuccess(false)
     }
-  }, [initialData])
+  }, [initialData?.id]) // Only depend on the ID to avoid unnecessary resets
 
   const frequencyOptions = [
     { value: 'once_daily', label: 'Once Daily' },
@@ -100,17 +104,32 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
       if (initialData?.id) {
         // Update existing medication
         response = await apiClient.put(`/api/medications/medications/${initialData.id}/`, payload)
-        if (onMedicationUpdated) {
-          onMedicationUpdated(response.data)
+        
+        // Show success notification first
+        setSuccess(true)
+        
+        if (onMedicationUpdated && response.data) {
+          // Ensure the response has the ID for proper state update
+          const updatedMedication = { ...response.data, id: response.data.id || initialData.id }
+          onMedicationUpdated(updatedMedication)
         }
-        // Clear editing state after successful update
+        // Clear editing state after showing success message
         if (onCancel) {
-          setTimeout(() => onCancel(), 500) // Small delay to show success message
+          setTimeout(() => {
+            setSuccess(false)
+            onCancel()
+          }, 2000) // Show success message for 2 seconds before clearing form
+        } else {
+          setTimeout(() => setSuccess(false), 3000)
         }
       } else {
         // Create new medication
         response = await apiClient.post('/api/medications/medications/', payload)
         onMedicationAdded(response.data)
+        
+        // Show success notification
+        setSuccess(true)
+        setTimeout(() => setSuccess(false), 3000)
         
         // Reset form
         setName('')
@@ -121,16 +140,24 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
         setIsActive(true)
         setNotes('')
       }
-
-      setSuccess(true)
-      setTimeout(() => setSuccess(false), 3000)
     } catch (err: any) {
+      console.error('Medication save error:', err)
       const errorMsg = err.response?.data
-      if (typeof errorMsg === 'object') {
-        const firstError = Object.values(errorMsg)[0]
-        setError(Array.isArray(firstError) ? firstError[0] : String(firstError))
+      if (typeof errorMsg === 'object' && errorMsg !== null) {
+        // Handle validation errors
+        const errorKeys = Object.keys(errorMsg)
+        if (errorKeys.length > 0) {
+          const firstError = errorMsg[errorKeys[0]]
+          setError(Array.isArray(firstError) ? firstError[0] : String(firstError))
+        } else {
+          setError('Failed to save medication. Please try again.')
+        }
+      } else if (err.response?.status === 404) {
+        setError('Medication not found. It may have been deleted.')
+      } else if (err.response?.status >= 500) {
+        setError('Server error. Please try again later.')
       } else {
-        setError('Failed to save medication. Please try again.')
+        setError(err.message || 'Failed to save medication. Please try again.')
       }
     } finally {
       setLoading(false)
@@ -144,11 +171,46 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
           {error}
         </Alert>
       )}
-      {success && (
-        <Alert severity="success" sx={{ mb: 2 }}>
+      <Snackbar
+        open={success}
+        autoHideDuration={3000}
+        onClose={() => setSuccess(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        sx={{
+          zIndex: 9999,
+          '& .MuiSnackbarContent-root': {
+            backgroundColor: '#4caf50',
+            color: '#fff',
+            fontSize: { xs: '1rem', sm: '1.1rem' },
+            fontWeight: 600,
+            padding: { xs: '16px 24px', sm: '20px 32px' },
+            borderRadius: '12px',
+            boxShadow: '0 8px 24px rgba(76, 175, 80, 0.4)',
+            minWidth: { xs: '280px', sm: '320px' },
+            maxWidth: { xs: '90vw', sm: '400px' },
+          }
+        }}
+      >
+        <Alert 
+          severity="success" 
+          onClose={() => setSuccess(false)}
+          icon={<CheckCircleIcon sx={{ color: '#fff', fontSize: '1.5rem' }} />}
+          sx={{ 
+            width: '100%',
+            backgroundColor: 'transparent',
+            color: '#fff',
+            '& .MuiAlert-icon': {
+              color: '#fff',
+            },
+            '& .MuiAlert-message': {
+              fontWeight: 600,
+              fontSize: { xs: '1rem', sm: '1.1rem' },
+            }
+          }}
+        >
           Medication {initialData?.id ? 'updated' : 'added'} successfully!
         </Alert>
-      )}
+      </Snackbar>
 
       <Grid container spacing={2}>
         <Grid item xs={12}>
@@ -254,8 +316,11 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
               type="submit"
               variant="contained"
               disabled={loading}
+              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
             >
-              {initialData?.id ? 'Update' : 'Add'} Medication
+              {loading 
+                ? (initialData?.id ? 'Updating...' : 'Adding...') 
+                : (initialData?.id ? 'Update' : 'Add') + ' Medication'}
             </Button>
           </Box>
         </Grid>

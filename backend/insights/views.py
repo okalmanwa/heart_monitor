@@ -3,11 +3,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
-from .models import UserInsight
+from .models import UserInsight, UserInsightSummary
 from .serializers import UserInsightSerializer
-from .ai_service import generate_insights_with_ai, generate_insight_summary
+from .ai_service import generate_insights_with_ai, generate_and_cache_insight_summary
 from .signals import generate_insights_for_user_async
-from notifications.tasks import send_insight_notification_email
 
 User = get_user_model()
 
@@ -72,48 +71,36 @@ class UserInsightViewSet(viewsets.ModelViewSet):
         
         try:
             # Try to run asynchronously first (if Celery/Redis available)
+            # Use force=True to bypass 24-hour cooldown for manual generation
             try:
-                generate_insights_for_user_async.delay(target_user.id)
+                generate_insights_for_user_async.delay(target_user.id, force=True)
                 return Response({
                     'message': 'Insights generation started. Please refresh in a few moments.',
                     'insights_created': 0,
                     'status': 'processing'
                 }, status=status.HTTP_202_ACCEPTED)
-            except Exception:
-                # Fall back to synchronous generation if async fails
-                # This is slower but works without Redis
-                created_insights = generate_insights_with_ai(target_user)
+            except Exception as async_err:
+                # If async fails, still return 202 and process in background thread
+                # This prevents blocking the HTTP request
+                import threading
                 
-                if not created_insights:
-                    return Response({
-                        'message': 'No insights generated. User needs at least one blood pressure reading.',
-                        'insights_created': 0
-                    }, status=status.HTTP_200_OK)
-                
-                # Send notification email for each new insight
-                for insight in created_insights:
+                def generate_in_background():
                     try:
-                        send_insight_notification_email.delay(
-                            target_user.id,
-                            insight.insight_text
-                        )
-                    except Exception:
-                        try:
-                            send_insight_notification_email(
-                                target_user.id,
-                                insight.insight_text
-                            )
-                        except Exception:
-                            pass
+                        created_insights = generate_insights_with_ai(target_user)
+                    except Exception as bg_err:
+                        print(f"Background insight generation failed: {bg_err}")
                 
-                # Serialize the created insights
-                serializer = self.get_serializer(created_insights, many=True)
+                # Start background thread
+                thread = threading.Thread(target=generate_in_background)
+                thread.daemon = True
+                thread.start()
                 
+                # Return immediately with 202 status
                 return Response({
-                    'message': f'Successfully generated {len(created_insights)} insights',
-                    'insights_created': len(created_insights),
-                    'insights': serializer.data
-                }, status=status.HTTP_201_CREATED)
+                    'message': 'Insights generation started in background. Please refresh in a few moments.',
+                    'insights_created': 0,
+                    'status': 'processing'
+                }, status=status.HTTP_202_ACCEPTED)
             
         except ValueError as e:
             return Response(
@@ -129,39 +116,63 @@ class UserInsightViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='summary')
     def get_summary(self, request):
         """
-        Get an AI-generated summary of all insights for the current user
-        Only generates summary if insights exist
+        Get or generate a cached summary of insights for the current user
         """
+        user = request.user
+        
+        # Check if user has insights
+        has_insights = UserInsight.objects.filter(user=user).exists()
+        if not has_insights:
+            return Response({
+                'summary': None,
+                'has_insights': False,
+                'message': 'No insights available. Generate insights first.'
+            }, status=status.HTTP_200_OK)
+        
+        # Try to get cached summary or generate new one
         try:
-            # Check if user has any insights first
-            insights_count = UserInsight.objects.filter(user=request.user).count()
-            if insights_count == 0:
+            summary_obj = UserInsightSummary.objects.get(user=user)
+            current_insight_count = UserInsight.objects.filter(user=user).count()
+            
+            # If insight count matches, return cached summary
+            if summary_obj.insight_count == current_insight_count:
                 return Response({
-                    'summary': None,
-                    'has_insights': False,
-                    'message': 'No insights available to summarize.'
+                    'summary': summary_obj.summary_text,
+                    'has_insights': True,
+                    'generated_at': summary_obj.generated_at,
+                    'updated_at': summary_obj.updated_at
                 }, status=status.HTTP_200_OK)
+        except UserInsightSummary.DoesNotExist:
+            pass
+        except Exception as e:
+            # Handle database errors gracefully (e.g., table doesn't exist yet)
+            print(f"Error accessing summary cache: {e}")
+            # Continue to generate summary
+        
+        # Generate new summary (or regenerate if count changed)
+        try:
+            summary_text = generate_and_cache_insight_summary(user, force_regenerate=True)
             
-            # Generate summary (this may take a moment but is faster than full generation)
-            summary = generate_insight_summary(request.user)
-            
-            if not summary:
+            if summary_text:
+                summary_obj = UserInsightSummary.objects.get(user=user)
+                return Response({
+                    'summary': summary_text,
+                    'has_insights': True,
+                    'generated_at': summary_obj.generated_at,
+                    'updated_at': summary_obj.updated_at
+                }, status=status.HTTP_200_OK)
+            else:
                 return Response({
                     'summary': None,
                     'has_insights': True,
-                    'message': 'Summary generation is temporarily unavailable.'
+                    'message': 'Failed to generate summary. Please try again.'
                 }, status=status.HTTP_200_OK)
-            
-            return Response({
-                'summary': summary,
-                'has_insights': True
-            }, status=status.HTTP_200_OK)
-            
         except Exception as e:
-            # Don't fail completely - just return that summary isn't available
+            # Handle errors gracefully (e.g., OpenAI API issues, database issues)
+            print(f"Error generating summary: {e}")
             return Response({
                 'summary': None,
-                'has_insights': UserInsight.objects.filter(user=request.user).exists(),
-                'message': 'Summary generation is temporarily unavailable.'
+                'has_insights': True,
+                'message': 'Summary generation temporarily unavailable. Please try again later.'
             }, status=status.HTTP_200_OK)
 

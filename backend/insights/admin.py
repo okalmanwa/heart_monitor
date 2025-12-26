@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import UserInsight
+from .models import UserInsight, UserInsightSummary
 
 
 @admin.register(UserInsight)
@@ -59,3 +59,32 @@ class UserInsightAdmin(admin.ModelAdmin):
         preview = obj.insight_text[:100] + '...' if len(obj.insight_text) > 100 else obj.insight_text
         return preview
     insight_preview.short_description = 'Insight'
+
+
+@admin.register(UserInsightSummary)
+class UserInsightSummaryAdmin(admin.ModelAdmin):
+    list_display = ('user', 'summary_preview', 'insight_count', 'generated_at', 'updated_at')
+    list_filter = ('generated_at', 'updated_at')
+    search_fields = ('user__email', 'user__username', 'summary_text')
+    readonly_fields = ('generated_at', 'updated_at')
+    date_hierarchy = 'generated_at'
+    ordering = ('-updated_at',)
+    
+    fieldsets = (
+        ('Patient Information', {
+            'fields': ('user',)
+        }),
+        ('Summary', {
+            'fields': ('summary_text', 'insight_count')
+        }),
+        ('Timestamps', {
+            'fields': ('generated_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def summary_preview(self, obj):
+        """Display preview of summary text"""
+        preview = obj.summary_text[:150] + '...' if len(obj.summary_text) > 150 else obj.summary_text
+        return preview
+    summary_preview.short_description = 'Summary'

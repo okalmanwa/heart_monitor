@@ -213,18 +213,43 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Box sx={{ mb: 2 }}>
-        <ButtonGroup 
-          variant="outlined" 
-          size="small" 
+        <Box 
           sx={{ 
+            overflowX: 'auto',
+            overflowY: 'hidden',
+            width: '100%',
             mb: 2,
-            flexWrap: { xs: 'wrap', sm: 'nowrap' },
-            '& .MuiButton-root': {
-              fontSize: { xs: '0.7rem', sm: '0.875rem' },
-              px: { xs: 1, sm: 2 }
-            }
+            '&::-webkit-scrollbar': {
+              height: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: '#f1f1f1',
+              borderRadius: '4px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: '#888',
+              borderRadius: '4px',
+            },
+            '&::-webkit-scrollbar-thumb:hover': {
+              background: '#555',
+            },
           }}
         >
+          <ButtonGroup 
+            variant="outlined" 
+            size="small" 
+            sx={{ 
+              display: 'inline-flex',
+              flexWrap: 'nowrap',
+              '& .MuiButton-root': {
+                fontSize: { xs: '0.7rem', sm: '0.875rem' },
+                px: { xs: 1, sm: 2 },
+                minWidth: { xs: 'fit-content', sm: 'auto' },
+                whiteSpace: 'nowrap',
+                flexShrink: 0
+              }
+            }}
+          >
           <Button
             variant={timePeriod === '7d' ? 'contained' : 'outlined'}
             onClick={() => setTimePeriod('7d')}
@@ -261,7 +286,8 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
           >
             Custom
           </Button>
-        </ButtonGroup>
+          </ButtonGroup>
+        </Box>
 
         {timePeriod === 'custom' && (
           <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>

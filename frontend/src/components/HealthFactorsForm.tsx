@@ -7,6 +7,8 @@ import {
   Box,
   Slider,
   Grid,
+  CircularProgress,
+  Snackbar,
 } from '@mui/material'
 import apiClient from '../config/axios'
 import { HealthFactor } from '../types'
@@ -28,18 +30,21 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [dateError, setDateError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setDateError('')
     setSuccess(false)
+    setLoading(true)
 
     // Validate date is present
     const dateValue = date.trim()
     if (!dateValue) {
       setDateError('Please select a date.')
       setError('Please select a date.')
+      setLoading(false)
       return
     }
 
@@ -127,6 +132,8 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
       } else {
         setError(err.message || 'Failed to add health factor. Please try again.')
       }
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -137,11 +144,48 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
           {error}
         </Alert>
       )}
-      {success && (
-        <Alert severity="success" sx={{ mb: 2 }}>
+      <Snackbar
+        open={success}
+        autoHideDuration={3000}
+        onClose={() => setSuccess(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        sx={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          bottom: 'auto',
+          '& .MuiSnackbarContent-root': {
+            backgroundColor: '#4caf50',
+            color: '#fff',
+            fontSize: { xs: '1rem', sm: '1.1rem' },
+            fontWeight: 600,
+            padding: { xs: '16px 24px', sm: '20px 32px' },
+            borderRadius: '12px',
+            boxShadow: '0 8px 24px rgba(76, 175, 80, 0.4)',
+            minWidth: { xs: '280px', sm: '320px' },
+            maxWidth: { xs: '90vw', sm: '400px' },
+          }
+        }}
+      >
+        <Alert 
+          severity="success" 
+          onClose={() => setSuccess(false)}
+          sx={{ 
+            width: '100%',
+            backgroundColor: 'transparent',
+            color: '#fff',
+            '& .MuiAlert-icon': {
+              color: '#fff',
+            },
+            '& .MuiAlert-message': {
+              fontWeight: 600,
+            }
+          }}
+        >
           Health factor added successfully!
         </Alert>
-      )}
+      </Snackbar>
 
       <TextField
         margin="normal"
@@ -243,9 +287,11 @@ const HealthFactorsForm: React.FC<HealthFactorsFormProps> = ({ onFactorAdded }) 
         type="submit"
         fullWidth
         variant="contained"
+        disabled={loading}
         sx={{ mt: 2 }}
+        startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
       >
-        Add Health Factors
+        {loading ? 'Adding...' : 'Add Health Factors'}
       </Button>
     </form>
   )

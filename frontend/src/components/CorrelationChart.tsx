@@ -226,12 +226,13 @@ const CorrelationChart: React.FC<CorrelationChartProps> = ({
         Showing {matchedData.length} days with both BP readings and health factors
       </Typography>
 
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2, overflowX: 'auto' }}>
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2, overflowX: 'auto', width: '100%' }}>
         <Tabs 
           value={activeTab} 
           onChange={(_, newValue) => setActiveTab(newValue)}
           variant="scrollable"
           scrollButtons="auto"
+          allowScrollButtonsMobile
           sx={{
             '& .MuiTab-root': {
               fontSize: { xs: '0.7rem', sm: '0.875rem' },

@@ -8,6 +8,7 @@ import {
   Typography,
   Box,
   Alert,
+  CircularProgress,
 } from '@mui/material'
 import FavoriteIcon from '@mui/icons-material/Favorite'
 import { useAuth } from '../contexts/AuthContext'
@@ -18,15 +19,18 @@ const Register = () => {
   const [password, setPassword] = useState('')
   const [password2, setPassword2] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const { register } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setLoading(true)
 
     if (password !== password2) {
       setError('Passwords do not match')
+      setLoading(false)
       return
     }
 
@@ -41,6 +45,8 @@ const Register = () => {
       } else {
         setError('Registration failed. Please try again.')
       }
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -153,9 +159,11 @@ const Register = () => {
               type="submit"
               fullWidth
               variant="contained"
+              disabled={loading}
               sx={{ mt: 3, mb: 2 }}
+              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
             >
-              Sign Up
+              {loading ? 'Signing Up...' : 'Sign Up'}
             </Button>
             <Box textAlign="center">
               <Link to="/login" style={{ textDecoration: 'none' }}>

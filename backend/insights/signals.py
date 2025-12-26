@@ -5,14 +5,19 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from celery import shared_task
 from readings.models import BloodPressureReading
-from .ai_service import generate_insights_with_ai
+from .ai_service import generate_insights_with_ai, generate_and_cache_insight_summary
 from .models import UserInsight
-from notifications.tasks import send_insight_notification_email
 
 
 @shared_task
-def generate_insights_for_user_async(user_id):
-    """Async task to generate insights for a user"""
+def generate_insights_for_user_async(user_id, force=False):
+    """
+    Async task to generate insights for a user
+    
+    Args:
+        user_id: The user ID to generate insights for
+        force: If True, bypass the 24-hour cooldown check
+    """
     from django.contrib.auth import get_user_model
     from django.utils import timezone
     from datetime import timedelta
@@ -22,36 +27,46 @@ def generate_insights_for_user_async(user_id):
     try:
         user = User.objects.get(pk=user_id)
         
-        # Check if user has enough readings (at least 3)
+        # Check if user has enough readings (at least 1 for manual generation, 3 for auto)
         reading_count = BloodPressureReading.objects.filter(user=user).count()
-        if reading_count < 3:
-            return  # Not enough data yet
+        min_readings = 1 if force else 3
+        
+        if reading_count < min_readings:
+            print(f"Not enough readings for user {user_id}: {reading_count} < {min_readings}")
+            return 0  # Return 0 instead of None
         
         # Check when last insight was generated (avoid generating too frequently)
-        last_insight = UserInsight.objects.filter(user=user).order_by('-generated_at').first()
-        if last_insight:
-            # Don't generate if insights were created in the last 24 hours
-            if timezone.now() - last_insight.generated_at < timedelta(hours=24):
-                return
+        # Skip this check if force=True (manual generation)
+        if not force:
+            last_insight = UserInsight.objects.filter(user=user).order_by('-generated_at').first()
+            if last_insight:
+                time_since_last = timezone.now() - last_insight.generated_at
+                # Don't generate if insights were created in the last 24 hours
+                if time_since_last < timedelta(hours=24):
+                    hours_remaining = (timedelta(hours=24) - time_since_last).total_seconds() / 3600
+                    print(f"Insights generated recently for user {user_id}. Wait {hours_remaining:.1f} more hours.")
+                    return 0  # Return 0 instead of None
         
         # Generate insights
+        print(f"Generating insights for user {user_id}...")
         created_insights = generate_insights_with_ai(user)
         
-        # Send notification emails (async if Redis available, sync otherwise)
-        for insight in created_insights:
+        if created_insights:
+            print(f"Successfully generated {len(created_insights)} insights for user {user_id}")
+            # Regenerate summary after creating new insights
             try:
-                send_insight_notification_email.delay(user_id, insight.insight_text)
-            except Exception:
-                # If Redis/Celery is not available, run synchronously
-                try:
-                    send_insight_notification_email(user_id, insight.insight_text)
-                except Exception:
-                    # Silently fail if email sending fails (non-critical)
-                    pass
+                generate_and_cache_insight_summary(user, force_regenerate=True)
+                print(f"Updated summary for user {user_id}")
+            except Exception as summary_err:
+                print(f"Error generating summary for user {user_id}: {summary_err}")
+        else:
+            print(f"No insights generated for user {user_id}")
         
         return len(created_insights)
     except Exception as e:
         print(f"Error generating insights for user {user_id}: {e}")
+        import traceback
+        traceback.print_exc()
         return 0
 
 
