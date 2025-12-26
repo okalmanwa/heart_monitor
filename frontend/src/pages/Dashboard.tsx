@@ -126,9 +126,15 @@ const Dashboard = () => {
   }
 
   return (
-    <Box>
-      <AppBar position="static" sx={{ backgroundColor: '#d32f2f' }}>
-        <Toolbar sx={{ flexWrap: 'wrap' }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+      <AppBar 
+        position="static" 
+        sx={{ 
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          boxShadow: '0 4px 20px rgba(102, 126, 234, 0.3)',
+        }}
+      >
+        <Toolbar sx={{ flexWrap: 'wrap', py: { xs: 1, sm: 1.5 } }}>
           <Typography 
             variant="h6" 
             component="div" 
@@ -136,11 +142,12 @@ const Dashboard = () => {
               flexGrow: 1, 
               display: 'flex', 
               alignItems: 'center', 
-              gap: 1,
-              fontSize: { xs: '1rem', sm: '1.25rem' }
+              gap: 1.5,
+              fontSize: { xs: '1.1rem', sm: '1.5rem' },
+              fontWeight: 700,
             }}
           >
-            <FavoriteIcon sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }} /> 
+            <FavoriteIcon sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }} /> 
             <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
               Cardiac Monitor
             </Box>
@@ -148,36 +155,33 @@ const Dashboard = () => {
               CM
             </Box>
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
             <Typography 
               variant="body2" 
               sx={{ 
-                mr: { xs: 0, sm: 2 },
-                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                display: { xs: 'none', sm: 'block' }
+                fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                display: { xs: 'none', sm: 'block' },
+                opacity: 0.9,
               }}
             >
               {user?.email}
             </Typography>
-            {(user as any)?.is_staff && (
-              <Button
-                color="inherit"
-                href="/admin"
-                sx={{ 
-                  mr: { xs: 0.5, sm: 1 },
-                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                  px: { xs: 1, sm: 2 }
-                }}
-              >
-                Admin
-              </Button>
-            )}
             <Button 
-              color="inherit" 
+              variant="outlined"
               onClick={handleLogout}
               sx={{ 
-                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                px: { xs: 1, sm: 2 }
+                fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                px: { xs: 1.5, sm: 2.5 },
+                py: { xs: 0.5, sm: 0.75 },
+                borderColor: 'rgba(255, 255, 255, 0.5)',
+                color: 'white',
+                textTransform: 'none',
+                borderRadius: 2,
+                fontWeight: 500,
+                '&:hover': {
+                  borderColor: 'white',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                },
               }}
             >
               Logout
@@ -186,8 +190,17 @@ const Dashboard = () => {
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="lg" sx={{ mt: { xs: 2, sm: 4 }, mb: { xs: 2, sm: 4 }, px: { xs: 1, sm: 2 } }}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: { xs: 2, sm: 3 }, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+      <Container maxWidth="lg" sx={{ mt: { xs: 3, sm: 4 }, mb: { xs: 3, sm: 4 }, px: { xs: 2, sm: 3 } }}>
+        <Paper 
+          elevation={0}
+          sx={{ 
+            mb: { xs: 3, sm: 4 },
+            borderRadius: 3,
+            overflow: 'hidden',
+            border: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
           <Tabs 
             value={activeTab} 
             onChange={(_, newValue) => setActiveTab(newValue)}
@@ -195,31 +208,39 @@ const Dashboard = () => {
             scrollButtons="auto"
             allowScrollButtonsMobile
             sx={{
-              minHeight: { xs: 48, sm: 64 },
+              minHeight: { xs: 56, sm: 72 },
+              backgroundColor: 'background.paper',
               '& .MuiTabs-scrollButtons': {
-                width: { xs: 32, sm: 40 },
+                width: { xs: 36, sm: 44 },
                 '&.Mui-disabled': {
                   opacity: 0.3,
                 },
               },
+              '& .MuiTabs-indicator': {
+                height: 3,
+                borderRadius: '3px 3px 0 0',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              },
               '& .MuiTab-root': {
-                fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                fontSize: { xs: '0.85rem', sm: '0.95rem' },
                 fontWeight: 500,
-                minWidth: { xs: 80, sm: 120 },
-                px: { xs: 1.5, sm: 2.5 },
-                py: { xs: 1, sm: 1.5 },
+                minWidth: { xs: 90, sm: 130 },
+                px: { xs: 2, sm: 3 },
+                py: { xs: 1.5, sm: 2 },
                 textTransform: 'none',
                 color: 'text.secondary',
-                minHeight: { xs: 48, sm: 64 },
+                minHeight: { xs: 56, sm: 72 },
+                transition: 'all 0.2s ease',
                 '&:hover': {
                   color: 'primary.main',
+                  backgroundColor: 'rgba(102, 126, 234, 0.04)',
                 },
                 '&.Mui-selected': {
                   color: 'primary.main',
                   fontWeight: 600,
                 },
                 '& .MuiTab-iconWrapper': {
-                  marginRight: { xs: '0.5rem', sm: '0.75rem' },
+                  marginRight: { xs: '0.75rem', sm: '1rem' },
                 },
               },
             }}
@@ -255,13 +276,28 @@ const Dashboard = () => {
               aria-label="AI Insights"
             />
           </Tabs>
-        </Box>
+        </Paper>
 
         {activeTab === 0 && (
           <Grid container spacing={{ xs: 2, sm: 3 }}>
             <Grid item xs={12} md={4}>
-              <Paper sx={{ p: { xs: 2, sm: 3 } }}>
-                <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+              <Paper 
+                elevation={2}
+                sx={{ 
+                  p: { xs: 2.5, sm: 3.5 },
+                  borderRadius: 3,
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                }}
+              >
+                <Typography 
+                  variant="h6" 
+                  gutterBottom 
+                  sx={{ 
+                    fontSize: { xs: '1.2rem', sm: '1.4rem' },
+                    fontWeight: 600,
+                    mb: 2.5,
+                  }}
+                >
                   Add Reading
                 </Typography>
                 <ReadingForm onReadingAdded={handleReadingAdded} />
@@ -269,8 +305,23 @@ const Dashboard = () => {
             </Grid>
 
             <Grid item xs={12} md={8}>
-              <Paper sx={{ p: { xs: 2, sm: 3 } }}>
-                <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+              <Paper 
+                elevation={2}
+                sx={{ 
+                  p: { xs: 2.5, sm: 3.5 },
+                  borderRadius: 3,
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                }}
+              >
+                <Typography 
+                  variant="h6" 
+                  gutterBottom 
+                  sx={{ 
+                    fontSize: { xs: '1.2rem', sm: '1.4rem' },
+                    fontWeight: 600,
+                    mb: 2.5,
+                  }}
+                >
                   Blood Pressure Trends
                 </Typography>
                 <AdvancedBPChart readings={readings} />
@@ -278,8 +329,24 @@ const Dashboard = () => {
             </Grid>
 
             <Grid item xs={12}>
-              <Paper sx={{ p: { xs: 2, sm: 3 }, overflow: 'auto' }}>
-                <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+              <Paper 
+                elevation={2}
+                sx={{ 
+                  p: { xs: 2.5, sm: 3.5 },
+                  overflow: 'auto',
+                  borderRadius: 3,
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                }}
+              >
+                <Typography 
+                  variant="h6" 
+                  gutterBottom 
+                  sx={{ 
+                    fontSize: { xs: '1.2rem', sm: '1.4rem' },
+                    fontWeight: 600,
+                    mb: 2.5,
+                  }}
+                >
                   All Readings
                 </Typography>
                 <ReadingsTable
@@ -312,8 +379,23 @@ const Dashboard = () => {
         {activeTab === 1 && (
           <Grid container spacing={{ xs: 2, sm: 3 }}>
             <Grid item xs={12} md={4}>
-              <Paper sx={{ p: { xs: 2, sm: 3 } }}>
-                <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+              <Paper 
+                elevation={2}
+                sx={{ 
+                  p: { xs: 2.5, sm: 3.5 },
+                  borderRadius: 3,
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                }}
+              >
+                <Typography 
+                  variant="h6" 
+                  gutterBottom 
+                  sx={{ 
+                    fontSize: { xs: '1.2rem', sm: '1.4rem' },
+                    fontWeight: 600,
+                    mb: 2.5,
+                  }}
+                >
                   Track Health Factors
                 </Typography>
                 <HealthFactorsForm onFactorAdded={handleFactorAdded} />
@@ -321,8 +403,24 @@ const Dashboard = () => {
             </Grid>
 
             <Grid item xs={12} md={8}>
-              <Paper sx={{ p: { xs: 2, sm: 3 }, overflow: 'auto' }}>
-                <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+              <Paper 
+                elevation={2}
+                sx={{ 
+                  p: { xs: 2.5, sm: 3.5 },
+                  overflow: 'auto',
+                  borderRadius: 3,
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                }}
+              >
+                <Typography 
+                  variant="h6" 
+                  gutterBottom 
+                  sx={{ 
+                    fontSize: { xs: '1.2rem', sm: '1.4rem' },
+                    fontWeight: 600,
+                    mb: 2.5,
+                  }}
+                >
                   Health Factors History
                 </Typography>
                 <HealthFactorsTable
@@ -338,8 +436,23 @@ const Dashboard = () => {
         {activeTab === 2 && (
           <Grid container spacing={{ xs: 2, sm: 3 }}>
             <Grid item xs={12} md={4}>
-              <Paper sx={{ p: { xs: 2, sm: 3 } }}>
-                <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+              <Paper 
+                elevation={2}
+                sx={{ 
+                  p: { xs: 2.5, sm: 3.5 },
+                  borderRadius: 3,
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                }}
+              >
+                <Typography 
+                  variant="h6" 
+                  gutterBottom 
+                  sx={{ 
+                    fontSize: { xs: '1.2rem', sm: '1.4rem' },
+                    fontWeight: 600,
+                    mb: 2.5,
+                  }}
+                >
                   {editingMedication ? 'Edit Medication' : 'Add Medication'}
                 </Typography>
                 <MedicationForm
@@ -352,8 +465,24 @@ const Dashboard = () => {
             </Grid>
 
             <Grid item xs={12} md={8}>
-              <Paper sx={{ p: { xs: 2, sm: 3 }, overflow: 'auto' }}>
-                <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+              <Paper 
+                elevation={2}
+                sx={{ 
+                  p: { xs: 2.5, sm: 3.5 },
+                  overflow: 'auto',
+                  borderRadius: 3,
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                }}
+              >
+                <Typography 
+                  variant="h6" 
+                  gutterBottom 
+                  sx={{ 
+                    fontSize: { xs: '1.2rem', sm: '1.4rem' },
+                    fontWeight: 600,
+                    mb: 2.5,
+                  }}
+                >
                   My Medications
                 </Typography>
                 <MedicationsTable
@@ -371,8 +500,24 @@ const Dashboard = () => {
         {activeTab === 3 && (
           <Grid container spacing={{ xs: 2, sm: 3 }}>
             <Grid item xs={12}>
-              <Paper sx={{ p: { xs: 2, sm: 3 }, overflow: 'auto' }}>
-                <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+              <Paper 
+                elevation={2}
+                sx={{ 
+                  p: { xs: 2.5, sm: 3.5 },
+                  overflow: 'auto',
+                  borderRadius: 3,
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                }}
+              >
+                <Typography 
+                  variant="h6" 
+                  gutterBottom 
+                  sx={{ 
+                    fontSize: { xs: '1.2rem', sm: '1.4rem' },
+                    fontWeight: 600,
+                    mb: 3,
+                  }}
+                >
                   Advanced Charts & Correlations
                 </Typography>
                 <Box sx={{ mb: { xs: 2, sm: 3 } }}>
@@ -390,7 +535,14 @@ const Dashboard = () => {
         {activeTab === 4 && (
           <Grid container spacing={{ xs: 2, sm: 3 }}>
             <Grid item xs={12}>
-              <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+              <Paper 
+                elevation={2}
+                sx={{ 
+                  p: { xs: 2.5, sm: 3.5 },
+                  borderRadius: 3,
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                }}
+              >
                 <Insights />
               </Paper>
             </Grid>
