@@ -11,7 +11,11 @@ import {
   Filler,
 } from 'chart.js'
 import { Line } from 'react-chartjs-2'
-import { Box, Typography, ButtonGroup, Button, Paper } from '@mui/material'
+import { Box, Typography, ButtonGroup, Button, Paper, Card, CardContent, Chip, Grid } from '@mui/material'
+import FavoriteIcon from '@mui/icons-material/Favorite'
+import TrendingUpIcon from '@mui/icons-material/TrendingUp'
+import TrendingDownIcon from '@mui/icons-material/TrendingDown'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { BloodPressureReading } from '../types'
 import { format, subDays, subMonths, subYears, startOfDay, endOfDay } from 'date-fns'
 
@@ -88,6 +92,35 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
         new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime()
     )
   }, [readings, timePeriod, customStartDate, customEndDate])
+
+  // Calculate statistics for gamification
+  const stats = useMemo(() => {
+    if (filteredReadings.length === 0) return null
+    
+    const normalCount = filteredReadings.filter(r => r.category === 'normal').length
+    const normalPercentage = Math.round((normalCount / filteredReadings.length) * 100)
+    
+    const avgSystolic = filteredReadings.reduce((sum, r) => sum + r.systolic, 0) / filteredReadings.length
+    const avgDiastolic = filteredReadings.reduce((sum, r) => sum + r.diastolic, 0) / filteredReadings.length
+    
+    // Calculate trend (comparing first half vs second half)
+    const midPoint = Math.floor(filteredReadings.length / 2)
+    const firstHalf = filteredReadings.slice(0, midPoint)
+    const secondHalf = filteredReadings.slice(midPoint)
+    
+    const firstAvg = firstHalf.reduce((sum, r) => sum + (r.systolic + r.diastolic) / 2, 0) / firstHalf.length
+    const secondAvg = secondHalf.reduce((sum, r) => sum + (r.systolic + r.diastolic) / 2, 0) / secondHalf.length
+    
+    const trend = secondAvg < firstAvg ? 'improving' : secondAvg > firstAvg ? 'increasing' : 'stable'
+    
+    return {
+      normalPercentage,
+      avgSystolic: Math.round(avgSystolic),
+      avgDiastolic: Math.round(avgDiastolic),
+      trend,
+      trendValue: Math.abs(secondAvg - firstAvg).toFixed(1),
+    }
+  }, [filteredReadings])
 
   const chartData = useMemo(() => {
     if (filteredReadings.length === 0) {
@@ -173,14 +206,35 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
       },
       title: {
         display: true,
-        text: `Blood Pressure Trends (${filteredReadings.length} readings)`,
+        text: `📊 Your Blood Pressure Journey (${filteredReadings.length} readings)`,
+        font: {
+          size: 16,
+          weight: 'bold' as const,
+        },
+        color: '#333',
       },
       tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: 12,
+        borderRadius: 8,
         callbacks: {
+          title: (context: any) => {
+            const index = context[0].dataIndex
+            const reading = filteredReadings[index]
+            return `📅 ${format(new Date(reading.recorded_at), 'MMM dd, yyyy h:mm a')}`
+          },
+          label: (context: any) => {
+            const index = context.dataIndex
+            const reading = filteredReadings[index]
+            const emoji = reading.category === 'normal' ? '✅' : reading.category === 'elevated' ? '⚠️' : '🔴'
+            return `${context.dataset.label}: ${context.parsed.y} mmHg ${emoji}`
+          },
           afterLabel: (context: any) => {
             const index = context.dataIndex
             const reading = filteredReadings[index]
-            return `Category: ${reading.category?.replace('_', ' ').toUpperCase() || 'N/A'}`
+            const category = reading.category?.replace('_', ' ').toUpperCase() || 'N/A'
+            const heartRate = reading.heart_rate ? ` | 💓 ${reading.heart_rate} BPM` : ''
+            return `Status: ${category}${heartRate}`
           },
         },
       },
@@ -200,19 +254,131 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
 
   if (!chartData) {
     return (
-      <Paper sx={{ p: 3 }}>
-        <Box p={3} textAlign="center">
-          <Typography variant="body1" color="text.secondary">
-            No readings available for the selected time period. Add a reading to see the chart.
+      <Paper 
+        sx={{ 
+          p: 4,
+          borderRadius: 3,
+          background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        }}
+      >
+        <Box textAlign="center">
+          <FavoriteIcon sx={{ fontSize: 64, color: '#667eea', mb: 2, opacity: 0.5 }} />
+          <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: '#333' }}>
+            📊 No Data Yet
           </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+            Start tracking your blood pressure to see your health journey!
+          </Typography>
+          <Chip 
+            label="💡 Add your first reading to get started"
+            sx={{ 
+              backgroundColor: 'rgba(102, 126, 234, 0.1)',
+              color: '#667eea',
+              fontWeight: 600,
+            }}
+          />
         </Box>
       </Paper>
     )
   }
 
   return (
-    <Paper sx={{ p: 3 }}>
-      <Box sx={{ mb: 2 }}>
+    <Box>
+      {/* Statistics Cards */}
+      {stats && (
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          <Grid item xs={12} sm={4}>
+            <Card 
+              sx={{ 
+                background: stats.normalPercentage >= 70 
+                  ? 'linear-gradient(135deg, #4caf5015 0%, #4caf5005 100%)'
+                  : 'linear-gradient(135deg, #ff980015 0%, #ff980005 100%)',
+                border: `2px solid ${stats.normalPercentage >= 70 ? '#4caf5040' : '#ff980040'}`,
+                borderRadius: 3,
+              }}
+            >
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                  <CheckCircleIcon sx={{ color: stats.normalPercentage >= 70 ? '#4caf50' : '#ff9800' }} />
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: stats.normalPercentage >= 70 ? '#4caf50' : '#ff9800' }}>
+                    {stats.normalPercentage}%
+                  </Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  {stats.normalPercentage >= 70 ? '✅ Normal Readings' : '⚠️ Keep Tracking!'}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <Card 
+              sx={{ 
+                background: 'linear-gradient(135deg, #667eea15 0%, #764ba205 100%)',
+                border: '2px solid #667eea40',
+                borderRadius: 3,
+              }}
+            >
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                  <FavoriteIcon sx={{ color: '#667eea' }} />
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#667eea' }}>
+                    {stats.avgSystolic}/{stats.avgDiastolic}
+                  </Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  📊 Average BP
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <Card 
+              sx={{ 
+                background: stats.trend === 'improving' 
+                  ? 'linear-gradient(135deg, #4caf5015 0%, #4caf5005 100%)'
+                  : stats.trend === 'increasing'
+                  ? 'linear-gradient(135deg, #ff980015 0%, #ff980005 100%)'
+                  : 'linear-gradient(135deg, #75757515 0%, #75757505 100%)',
+                border: `2px solid ${stats.trend === 'improving' ? '#4caf5040' : stats.trend === 'increasing' ? '#ff980040' : '#75757540'}`,
+                borderRadius: 3,
+              }}
+            >
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                  {stats.trend === 'improving' ? (
+                    <TrendingDownIcon sx={{ color: '#4caf50' }} />
+                  ) : stats.trend === 'increasing' ? (
+                    <TrendingUpIcon sx={{ color: '#ff9800' }} />
+                  ) : (
+                    <TrendingUpIcon sx={{ color: '#757575', transform: 'rotate(90deg)' }} />
+                  )}
+                  <Typography 
+                    variant="h6" 
+                    sx={{ 
+                      fontWeight: 700,
+                      color: stats.trend === 'improving' ? '#4caf50' : stats.trend === 'increasing' ? '#ff9800' : '#757575'
+                    }}
+                  >
+                    {stats.trend === 'improving' ? '📉 Improving' : stats.trend === 'increasing' ? '📈 Increasing' : '➡️ Stable'}
+                  </Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  Trend: {stats.trendValue} mmHg
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      )}
+
+      <Paper 
+        sx={{ 
+          p: 3,
+          borderRadius: 3,
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+        }}
+      >
+        <Box sx={{ mb: 2 }}>
         <Box 
           sx={{ 
             overflowX: 'auto',
@@ -253,38 +419,86 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
           <Button
             variant={timePeriod === '7d' ? 'contained' : 'outlined'}
             onClick={() => setTimePeriod('7d')}
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              ...(timePeriod === '7d' && {
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              }),
+            }}
           >
-            7 Days
+            📅 7 Days
           </Button>
           <Button
             variant={timePeriod === '30d' ? 'contained' : 'outlined'}
             onClick={() => setTimePeriod('30d')}
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              ...(timePeriod === '30d' && {
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              }),
+            }}
           >
-            30 Days
+            📅 30 Days
           </Button>
           <Button
             variant={timePeriod === '90d' ? 'contained' : 'outlined'}
             onClick={() => setTimePeriod('90d')}
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              ...(timePeriod === '90d' && {
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              }),
+            }}
           >
-            90 Days
+            📅 90 Days
           </Button>
           <Button
             variant={timePeriod === '1y' ? 'contained' : 'outlined'}
             onClick={() => setTimePeriod('1y')}
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              ...(timePeriod === '1y' && {
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              }),
+            }}
           >
-            1 Year
+            📅 1 Year
           </Button>
           <Button
             variant={timePeriod === 'all' ? 'contained' : 'outlined'}
             onClick={() => setTimePeriod('all')}
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              ...(timePeriod === 'all' && {
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              }),
+            }}
           >
-            All Time
+            📊 All Time
           </Button>
           <Button
             variant={timePeriod === 'custom' ? 'contained' : 'outlined'}
             onClick={() => setTimePeriod('custom')}
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              ...(timePeriod === 'custom' && {
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              }),
+            }}
           >
-            Custom
+            🎯 Custom
           </Button>
           </ButtonGroup>
         </Box>
@@ -323,12 +537,41 @@ const AdvancedBPChart: React.FC<AdvancedBPChartProps> = ({ readings }) => {
         <Line data={chartData} options={options} />
       </Box>
 
-      <Box mt={2}>
-        <Typography variant="caption" color="text.secondary">
-          <strong>Color Legend:</strong> Green = Normal, Orange = Elevated, Red = High Stage 1/2
-        </Typography>
+      <Box mt={3}>
+        <Card 
+          sx={{ 
+            p: 2,
+            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+            borderRadius: 2,
+          }}
+        >
+          <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+            🎨 Color Guide:
+          </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+            <Chip 
+              label="✅ Green = Normal"
+              size="small"
+              sx={{ backgroundColor: '#4caf5020', color: '#2e7d32', fontWeight: 600 }}
+            />
+            <Chip 
+              label="⚠️ Orange = Elevated"
+              size="small"
+              sx={{ backgroundColor: '#ff980020', color: '#f57c00', fontWeight: 600 }}
+            />
+            <Chip 
+              label="🔴 Red = High"
+              size="small"
+              sx={{ backgroundColor: '#f4433620', color: '#c62828', fontWeight: 600 }}
+            />
+          </Box>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>
+            💡 Hover over data points to see detailed information about each reading!
+          </Typography>
+        </Card>
       </Box>
     </Paper>
+    </Box>
   )
 }
 
